@@ -692,6 +692,7 @@
         const bar = parseInt(btn.dataset.bar);
         const type = btn.dataset.type;
         bars[bar].push({ type, note: '' });
+        activePresetIndex = null;
         renderBars();
         saveState();
       });
@@ -700,6 +701,7 @@
     resetBtn.addEventListener('click', () => {
       stop();
       bars = [[], []];
+      activePresetIndex = null;
       renderBars();
       saveState();
     });
@@ -921,7 +923,8 @@
     }
 
     function saveState() {
-      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars }));
+      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars, activePresetIndex }));
+      if (activePresetIndex !== null) savePresetOverride(activePresetIndex);
     }
 
     function loadState() {
@@ -933,6 +936,7 @@
         volume = s.volume !== undefined ? s.volume : 0.8;
         speedUpBpm = s.speedUpBpm || 0;
         speedUpBars = s.speedUpBars || 4;
+        activePresetIndex = s.activePresetIndex !== undefined ? s.activePresetIndex : null;
       } else {
         bars = [[{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0},{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0}],[]];
         tempo = 72;
@@ -959,6 +963,19 @@
       { name: 'Bend & Run', data: {"bars":[[{"type":"quaver","note":"a5","bend":2},{"type":"semiquaver","note":"b5"},{"type":"semiquaver","note":"d6"}],[]],"tempo":96,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} }
     ];
 
+    let activePresetIndex = null;
+
+    function getPresetOverrides() {
+      const saved = localStorage.getItem('metronome_presets');
+      return saved ? JSON.parse(saved) : {};
+    }
+
+    function savePresetOverride(index) {
+      const overrides = getPresetOverrides();
+      overrides[index] = { tempo, volume, speedUpBpm, speedUpBars };
+      localStorage.setItem('metronome_presets', JSON.stringify(overrides));
+    }
+
     function renderPresets() {
       const row = document.getElementById('presetsRow');
       row.innerHTML = '';
@@ -968,17 +985,20 @@
         btn.addEventListener('click', () => {
           stop();
           const d = preset.data;
+          const overrides = getPresetOverrides();
+          const ov = overrides[i];
           bars = JSON.parse(JSON.stringify(d.bars));
-          tempo = d.tempo;
-          volume = d.volume;
-          speedUpBpm = d.speedUpBpm;
-          speedUpBars = d.speedUpBars;
+          tempo = ov ? ov.tempo : d.tempo;
+          volume = ov ? ov.volume : d.volume;
+          speedUpBpm = ov ? ov.speedUpBpm : d.speedUpBpm;
+          speedUpBars = ov ? ov.speedUpBars : d.speedUpBars;
           tempoSlider.value = tempo;
           tempoInput.value = tempo;
           volSlider.value = Math.round(volume * 100);
           volDisplay.textContent = Math.round(volume * 100) + '%';
           speedUpBpmInput.value = speedUpBpm;
           speedUpBarsInput.value = speedUpBars;
+          activePresetIndex = i;
           renderBars();
           saveState();
           row.querySelectorAll('button').forEach(b => b.classList.remove('active'));
@@ -991,6 +1011,10 @@
     loadState();
     renderPresets();
     renderBars();
+    if (activePresetIndex !== null) {
+      const btns = document.getElementById('presetsRow').querySelectorAll('button');
+      if (btns[activePresetIndex]) btns[activePresetIndex].classList.add('active');
+    }
   </script>
 </body>
 </html>
