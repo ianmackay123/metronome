@@ -47,6 +47,8 @@
     }
     .bar-row .bar-grid-wrapper {
       flex: 1;
+      min-width: 0;
+      overflow: hidden;
     }
     h1 {
       text-align: center;
@@ -149,6 +151,7 @@
       padding: 1rem;
       margin-bottom: 1rem;
       min-height: 60px;
+      overflow: hidden;
     }
     .bar-header {
       display: flex;
@@ -170,6 +173,8 @@
       gap: 0;
       align-items: stretch;
       width: 100%;
+      min-width: 0;
+      overflow: hidden;
     }
     .beat-cell {
       display: grid;
@@ -362,6 +367,35 @@
     }
     .visualizer .flash.on { opacity: 1; transition: none; }
 
+    .presets-section {
+      margin-bottom: 1rem;
+    }
+    .presets-section label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .presets-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .presets-row button {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #16213e;
+      color: #eee;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.15s;
+    }
+    .presets-row button:hover { background: #0f3460; }
+    .presets-row button.active {
+      background: #e94560;
+      border-color: #e94560;
+    }
+
     @media (max-width: 700px) {
       .bar-row {
         flex-direction: column;
@@ -388,6 +422,11 @@
     <div class="controls">
       <button id="playBtn" class="play-btn">Play</button>
       <button id="resetBtn" class="reset-btn">Reset</button>
+    </div>
+
+    <div class="presets-section">
+      <label>Presets</label>
+      <div class="presets-row" id="presetsRow"></div>
     </div>
 
     <div class="visualizer" id="visualizer">
@@ -667,7 +706,7 @@
           totalBeats += NOTE_TYPES[type].beats;
           const cell = document.createElement('div');
           cell.className = 'beat-cell' + (i === 0 && b === 0 && !isRest ? ' accent' : '');
-          cell.style.flex = `${NOTE_TYPES[type].beats} 0 0`;
+          cell.style.flex = `${NOTE_TYPES[type].beats} 1 0`;
           if (isRest) {
             cell.innerHTML = `
               <div class="note-bar" style="background:#555"></div>
@@ -879,7 +918,45 @@
       speedUpBarsInput.value = speedUpBars;
     }
 
+    const PRESETS = [
+      { name: 'Blues Bend Run', data: {"bars":[[{"type":"quaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"quaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"}],[]],"tempo":72,"volume":1,"speedUpBpm":1,"speedUpBars":1} },
+      { name: 'Blues Lick 2', data: {"bars":[[{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"}],[]],"tempo":82,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Pentatonic Bounce', data: {"bars":[[{"type":"semiquaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"D5","bend":2},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"a5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5"}],[]],"tempo":82,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Descending Run', data: {"bars":[[{"type":"semiquaver","note":"c6","bend":0},{"type":"semiquaver","note":"a5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"a5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5","bend":0},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"c5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"c5"},{"type":"semiquaver","note":"a4"}],[]],"tempo":82,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Quick Four', data: {"bars":[[{"type":"semiquaver","note":"g5","bend":0},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"e5"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} }
+    ];
+
+    function renderPresets() {
+      const row = document.getElementById('presetsRow');
+      row.innerHTML = '';
+      PRESETS.forEach((preset, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = preset.name;
+        btn.addEventListener('click', () => {
+          stop();
+          const d = preset.data;
+          bars = JSON.parse(JSON.stringify(d.bars));
+          tempo = d.tempo;
+          volume = d.volume;
+          speedUpBpm = d.speedUpBpm;
+          speedUpBars = d.speedUpBars;
+          tempoSlider.value = tempo;
+          tempoInput.value = tempo;
+          volSlider.value = Math.round(volume * 100);
+          volDisplay.textContent = Math.round(volume * 100) + '%';
+          speedUpBpmInput.value = speedUpBpm;
+          speedUpBarsInput.value = speedUpBars;
+          renderBars();
+          saveState();
+          row.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+        row.appendChild(btn);
+      });
+    }
+
     loadState();
+    renderPresets();
     renderBars();
   </script>
 </body>
