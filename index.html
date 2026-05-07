@@ -465,7 +465,7 @@
     <div class="bar-container">
       <div class="bar-header">
         <span class="bar-label">Bar 1</span>
-        <span class="bar-beats-info" id="bar0Info">0 beats</span>
+        <span class="bar-beats-info" id="bar0Info"></span>
       </div>
       <div class="bar-row">
         <div class="note-palette">
@@ -525,7 +525,7 @@
     <div class="bar-container">
       <div class="bar-header">
         <span class="bar-label">Bar 2 (optional)</span>
-        <span class="bar-beats-info" id="bar1Info">0 beats</span>
+        <span class="bar-beats-info" id="bar1Info"></span>
       </div>
       <div class="bar-row">
         <div class="note-palette">
@@ -788,7 +788,7 @@
           });
           grid.appendChild(cell);
         });
-        info.textContent = totalBeats + ' beat' + (totalBeats !== 1 ? 's' : '');
+        info.textContent = '';
       }
       renderTickMarkers();
     }
@@ -894,8 +894,25 @@
       if (note.rest) return;
 
       const osc = audioCtx.createOscillator();
+      osc.type = 'sawtooth';
+      const preGain = audioCtx.createGain();
+      preGain.gain.value = 8;
+      const distortion = audioCtx.createWaveShaper();
+      distortion.curve = makeDistortionCurve(400);
+      distortion.oversample = '4x';
+      const cabinet = audioCtx.createBiquadFilter();
+      cabinet.type = 'lowpass';
+      cabinet.frequency.value = 3500;
+      cabinet.Q.value = 0.7;
+      const highpass = audioCtx.createBiquadFilter();
+      highpass.type = 'highpass';
+      highpass.frequency.value = 120;
       const gain = audioCtx.createGain();
-      osc.connect(gain);
+      osc.connect(preGain);
+      preGain.connect(distortion);
+      distortion.connect(cabinet);
+      cabinet.connect(highpass);
+      highpass.connect(gain);
       gain.connect(audioCtx.destination);
 
       const baseFreq = note.freq || (isAccent ? 1000 : 800);
@@ -907,13 +924,24 @@
         const endFreq = baseFreq * Math.pow(2, note.bend / 12);
         osc.frequency.linearRampToValueAtTime(endFreq, time + dur);
       }
-      const vol = (isAccent ? 1.0 : 0.66) * volume;
+      const vol = (isAccent ? 0.4 : 0.26) * volume;
       gain.gain.setValueAtTime(vol, time);
       gain.gain.setValueAtTime(vol, time + dur * 0.7);
       gain.gain.linearRampToValueAtTime(0.001, time + dur);
 
       osc.start(time);
       osc.stop(time + dur + 0.01);
+    }
+
+    function makeDistortionCurve(amount) {
+      const samples = 44100;
+      const curve = new Float32Array(samples);
+      const deg = Math.PI / 180;
+      for (let i = 0; i < samples; i++) {
+        const x = (i * 2) / samples - 1;
+        curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
+      }
+      return curve;
     }
 
     function highlightCell(noteIndex) {
