@@ -586,7 +586,11 @@
         speedUpBpm = s.speedUpBpm || 0;
         speedUpBars = s.speedUpBars || 4;
       } else {
-        bars[0] = [{type:'crotchet',note:'',bend:0},{type:'crotchet',note:'',bend:0},{type:'crotchet',note:'',bend:0},{type:'crotchet',note:'',bend:0}];
+        bars = [[{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0},{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0}],[]];
+        tempo = 72;
+        volume = 1;
+        speedUpBpm = 1;
+        speedUpBars = 1;
       }
       tempoSlider.value = tempo;
       tempoInput.value = tempo;
