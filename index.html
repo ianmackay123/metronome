@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metronome</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .app {
+      max-width: 700px;
+      width: 100%;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      color: #e94560;
+    }
+    .tempo-section {
+      margin-bottom: 1.5rem;
+    }
+    .tempo-section label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-weight: 600;
+    }
+    .tempo-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .tempo-row input[type="range"] {
+      flex: 1;
+      accent-color: #e94560;
+    }
+    .tempo-row input[type="number"] {
+      width: 70px;
+      padding: 0.3rem;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #16213e;
+      color: #eee;
+      text-align: center;
+      font-size: 1rem;
+    }
+    .pattern-section {
+      margin-bottom: 1.5rem;
+    }
+    .pattern-section h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+    }
+    .add-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .add-buttons button {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #16213e;
+      color: #eee;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+    .add-buttons button:hover { background: #0f3460; }
+    .bar-container {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      min-height: 60px;
+    }
+    .bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .bar-label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #aaa;
+    }
+    .bar-beats-info {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    .beat-grid {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .beat-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 4px 2px;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .beat-cell:hover { background: rgba(233,69,96,0.15); }
+    .beat-cell.active { background: rgba(233,69,96,0.35); }
+    .beat-cell .note-bar {
+      width: 20px;
+      border-radius: 3px;
+      background: #e94560;
+      transition: height 0.15s;
+    }
+    .beat-cell.accent .note-bar { background: #ff6b6b; }
+    .beat-cell .note-label {
+      font-size: 0.65rem;
+      color: #888;
+      margin-top: 3px;
+    }
+    .beat-cell .pitch-input {
+      width: 32px;
+      font-size: 0.65rem;
+      text-align: center;
+      border: 1px solid #444;
+      border-radius: 3px;
+      background: #0f3460;
+      color: #eee;
+      padding: 1px 2px;
+      margin-top: 3px;
+    }
+    .beat-cell .pitch-input:focus {
+      outline: 1px solid #e94560;
+      border-color: #e94560;
+    }
+    .beat-cell .bend-input {
+      width: 32px;
+      font-size: 0.6rem;
+      text-align: center;
+      border: 1px solid #444;
+      border-radius: 3px;
+      background: #0f3460;
+      color: #ff8a5c;
+      padding: 1px 2px;
+      margin-top: 2px;
+    }
+    .beat-cell .bend-input:focus {
+      outline: 1px solid #ff8a5c;
+      border-color: #ff8a5c;
+    }
+    .beat-cell .remove-btn {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #e94560;
+      color: white;
+      font-size: 9px;
+      border: none;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .beat-cell:hover .remove-btn { display: flex; }
+    .controls {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .controls button {
+      padding: 0.6rem 1.8rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+    .controls button:active { transform: scale(0.95); }
+    .play-btn {
+      background: #e94560;
+      color: white;
+    }
+    .play-btn.playing { background: #ff8a5c; }
+    .reset-btn {
+      background: #333;
+      color: #eee;
+    }
+    .reset-btn:hover { background: #444; }
+    .visualizer {
+      height: 50px;
+      background: #16213e;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .visualizer .tick-marker {
+      position: absolute;
+      bottom: 0;
+      width: 2px;
+      background: #444;
+      height: 100%;
+    }
+    .visualizer .playhead-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: #e94560;
+      border-radius: 2px;
+      transition: left 0.05s linear;
+    }
+    .visualizer .flash {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(233,69,96,0.3);
+      opacity: 0;
+      transition: opacity 0.05s;
+    }
+    .visualizer .flash.on { opacity: 1; transition: none; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Metronome</h1>
+
+    <div class="tempo-section">
+      <label>Tempo</label>
+      <div class="tempo-row">
+        <input type="range" id="tempoSlider" min="20" max="300" value="120">
+        <input type="number" id="tempoInput" min="20" max="300" value="120">
+        <span>BPM</span>
+      </div>
+    </div>
+
+    <div class="tempo-section">
+      <label>Volume</label>
+      <div class="tempo-row">
+        <input type="range" id="volSlider" min="0" max="100" value="80">
+        <span id="volDisplay">80%</span>
+      </div>
+    </div>
+
+    <div class="tempo-section">
+      <label>Speed Up</label>
+      <div class="tempo-row">
+        <span>+</span>
+        <input type="number" id="speedUpBpm" min="0" max="20" value="0" style="width:50px;padding:0.3rem;border:1px solid #444;border-radius:4px;background:#16213e;color:#eee;text-align:center;font-size:1rem;">
+        <span>BPM every</span>
+        <input type="number" id="speedUpBars" min="1" max="64" value="4" style="width:50px;padding:0.3rem;border:1px solid #444;border-radius:4px;background:#16213e;color:#eee;text-align:center;font-size:1rem;">
+        <span>bars</span>
+      </div>
+    </div>
+
+    <div class="pattern-section">
+      <h2>Pattern</h2>
+      <div class="add-buttons">
+        <button data-bar="0" data-type="crotchet">+ Crotchet (&#9833;)</button>
+        <button data-bar="0" data-type="quaver">+ Quaver (&#9834;)</button>
+        <button data-bar="0" data-type="semiquaver">+ Semiquaver (&#119137;)</button>
+        <span style="width:20px"></span>
+        <button data-bar="1" data-type="crotchet">+ Crotchet (&#9833;)</button>
+        <button data-bar="1" data-type="quaver">+ Quaver (&#9834;)</button>
+        <button data-bar="1" data-type="semiquaver">+ Semiquaver (&#119137;)</button>
+      </div>
+
+      <div class="bar-container">
+        <div class="bar-header">
+          <span class="bar-label">Bar 1</span>
+          <span class="bar-beats-info" id="bar0Info">0 beats</span>
+        </div>
+        <div class="beat-grid" id="bar0Grid"></div>
+      </div>
+      <div class="bar-container">
+        <div class="bar-header">
+          <span class="bar-label">Bar 2 (optional)</span>
+          <span class="bar-beats-info" id="bar1Info">0 beats</span>
+        </div>
+        <div class="beat-grid" id="bar1Grid"></div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="playBtn" class="play-btn">Play</button>
+      <button id="resetBtn" class="reset-btn">Reset</button>
+    </div>
+
+    <div class="visualizer" id="visualizer">
+      <div class="flash" id="flash"></div>
+      <div class="playhead-line" id="playhead"></div>
+    </div>
+  </div>
+
+  <script>
+    const NOTE_TYPES = {
+      crotchet: { beats: 1, label: '♩', height: 36 },
+      quaver: { beats: 0.5, label: '♪', height: 26 },
+      semiquaver: { beats: 0.25, label: '𝅘𝅥𝅯', height: 18 }
+    };
+
+    const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+    function noteToFreq(name) {
+      if (!name) return null;
+      const match = name.trim().match(/^([A-Ga-g])(#|b)?(\d)$/);
+      if (!match) return null;
+      let note = match[1].toUpperCase();
+      const acc = match[2];
+      const oct = parseInt(match[3]);
+      let semitone = NOTE_NAMES.indexOf(note);
+      if (semitone === -1) return null;
+      if (acc === '#') semitone++;
+      if (acc === 'b') semitone--;
+      const midi = (oct + 1) * 12 + semitone;
+      return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    let bars = [[], []];
+    let tempo = 120;
+    let volume = 0.8;
+    let speedUpBpm = 0;
+    let speedUpBars = 4;
+    let loopCount = 0;
+    let playing = false;
+    let audioCtx = null;
+    let nextNoteTime = 0;
+    let currentNote = 0;
+    let timerID = null;
+    let pattern = [];
+
+    const tempoSlider = document.getElementById('tempoSlider');
+    const tempoInput = document.getElementById('tempoInput');
+    const playBtn = document.getElementById('playBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const flash = document.getElementById('flash');
+    const playhead = document.getElementById('playhead');
+    const visualizer = document.getElementById('visualizer');
+
+    tempoSlider.addEventListener('input', () => {
+      tempo = parseInt(tempoSlider.value);
+      tempoInput.value = tempo;
+      saveState();
+    });
+    tempoInput.addEventListener('change', () => {
+      tempo = Math.max(20, Math.min(300, parseInt(tempoInput.value) || 120));
+      tempoInput.value = tempo;
+      tempoSlider.value = tempo;
+      saveState();
+    });
+
+    const volSlider = document.getElementById('volSlider');
+    const volDisplay = document.getElementById('volDisplay');
+    volSlider.addEventListener('input', () => {
+      volume = parseInt(volSlider.value) / 100;
+      volDisplay.textContent = volSlider.value + '%';
+      saveState();
+    });
+
+    const speedUpBpmInput = document.getElementById('speedUpBpm');
+    const speedUpBarsInput = document.getElementById('speedUpBars');
+    speedUpBpmInput.addEventListener('change', () => {
+      speedUpBpm = parseInt(speedUpBpmInput.value) || 0;
+      saveState();
+    });
+    speedUpBarsInput.addEventListener('change', () => {
+      speedUpBars = Math.max(1, parseInt(speedUpBarsInput.value) || 4);
+      speedUpBarsInput.value = speedUpBars;
+      saveState();
+    });
+
+    document.querySelectorAll('.add-buttons button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const bar = parseInt(btn.dataset.bar);
+        const type = btn.dataset.type;
+        bars[bar].push({ type, note: '' });
+        renderBars();
+        saveState();
+      });
+    });
+
+    resetBtn.addEventListener('click', () => {
+      stop();
+      bars = [[], []];
+      renderBars();
+      saveState();
+    });
+
+    playBtn.addEventListener('click', () => {
+      if (playing) { stop(); } else { start(); }
+    });
+
+    function renderBars() {
+      for (let b = 0; b < 2; b++) {
+        const grid = document.getElementById(`bar${b}Grid`);
+        const info = document.getElementById(`bar${b}Info`);
+        grid.innerHTML = '';
+        let totalBeats = 0;
+        bars[b].forEach((item, i) => {
+          const type = typeof item === 'string' ? item : item.type;
+          const note = typeof item === 'string' ? '' : (item.note || '');
+          const bend = typeof item === 'string' ? 0 : (item.bend || 0);
+          if (typeof item === 'string') bars[b][i] = { type, note, bend: 0 };
+          totalBeats += NOTE_TYPES[type].beats;
+          const cell = document.createElement('div');
+          cell.className = 'beat-cell' + (i === 0 && b === 0 ? ' accent' : '');
+          cell.innerHTML = `
+            <div class="note-bar" style="height:${NOTE_TYPES[type].height}px"></div>
+            <span class="note-label">${NOTE_TYPES[type].label}</span>
+            <input class="pitch-input" type="text" value="${note}" placeholder="C4" maxlength="3">
+            <input class="bend-input" type="number" value="${bend}" placeholder="↑st" min="0" max="24" title="Bend up (semitones)">
+            <button class="remove-btn">&times;</button>
+          `;
+          cell.querySelector('.pitch-input').addEventListener('change', (e) => {
+            bars[b][i].note = e.target.value;
+            saveState();
+          });
+          cell.querySelector('.bend-input').addEventListener('change', (e) => {
+            bars[b][i].bend = parseInt(e.target.value) || 0;
+            saveState();
+          });
+          cell.querySelector('.remove-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            bars[b].splice(i, 1);
+            renderBars();
+            saveState();
+          });
+          grid.appendChild(cell);
+        });
+        info.textContent = totalBeats + ' beat' + (totalBeats !== 1 ? 's' : '');
+      }
+      renderTickMarkers();
+    }
+
+    function renderTickMarkers() {
+      document.querySelectorAll('.tick-marker').forEach(el => el.remove());
+      const flat = buildPattern();
+      if (flat.length === 0) return;
+      const totalBeats = flat.reduce((s, n) => s + n.beats, 0);
+      let pos = 0;
+      flat.forEach((note) => {
+        const marker = document.createElement('div');
+        marker.className = 'tick-marker';
+        marker.style.left = (pos / totalBeats * 100) + '%';
+        visualizer.appendChild(marker);
+        pos += note.beats;
+      });
+    }
+
+    function buildPattern() {
+      const flat = [];
+      for (let b = 0; b < 2; b++) {
+        if (bars[b].length === 0) continue;
+        bars[b].forEach((item) => {
+          const type = typeof item === 'string' ? item : item.type;
+          const note = typeof item === 'string' ? '' : (item.note || '');
+          const bend = typeof item === 'string' ? 0 : (item.bend || 0);
+          flat.push({
+            type,
+            beats: NOTE_TYPES[type].beats,
+            accent: flat.length === 0,
+            freq: noteToFreq(note),
+            bend
+          });
+        });
+      }
+      return flat;
+    }
+
+    function start() {
+      pattern = buildPattern();
+      if (pattern.length === 0) return;
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      playing = true;
+      playBtn.textContent = 'Stop';
+      playBtn.classList.add('playing');
+      currentNote = 0;
+      loopCount = 0;
+      nextNoteTime = audioCtx.currentTime + 0.05;
+      scheduler();
+    }
+
+    function stop() {
+      playing = false;
+      playBtn.textContent = 'Play';
+      playBtn.classList.remove('playing');
+      if (timerID) { clearTimeout(timerID); timerID = null; }
+      playhead.style.left = '0%';
+    }
+
+    function scheduler() {
+      while (nextNoteTime < audioCtx.currentTime + 0.1) {
+        scheduleNote(currentNote, nextNoteTime);
+        const note = pattern[currentNote];
+        const beatDuration = 60.0 / tempo;
+        nextNoteTime += note.beats * beatDuration;
+        currentNote++;
+        if (currentNote >= pattern.length) {
+          currentNote = 0;
+          loopCount++;
+          if (speedUpBpm > 0 && loopCount % speedUpBars === 0) {
+            tempo = Math.min(300, tempo + speedUpBpm);
+            tempoSlider.value = tempo;
+            tempoInput.value = tempo;
+          }
+        }
+      }
+      timerID = setTimeout(scheduler, 25);
+    }
+
+    function scheduleNote(noteIndex, time) {
+      const note = pattern[noteIndex];
+      const isAccent = note.accent;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const baseFreq = note.freq || (isAccent ? 1000 : 800);
+      const beatDur = note.beats * (60.0 / tempo);
+      const hasBend = note.bend > 0;
+      const dur = hasBend ? beatDur * 0.9 : Math.min(beatDur * 0.9, 0.08);
+      osc.frequency.setValueAtTime(baseFreq, time);
+      if (hasBend) {
+        const endFreq = baseFreq * Math.pow(2, note.bend / 12);
+        osc.frequency.linearRampToValueAtTime(endFreq, time + dur);
+      }
+      const vol = (isAccent ? 1.0 : 0.66) * volume;
+      gain.gain.setValueAtTime(vol, time);
+      gain.gain.setValueAtTime(vol, time + dur * 0.7);
+      gain.gain.linearRampToValueAtTime(0.001, time + dur);
+
+      osc.start(time);
+      osc.stop(time + dur + 0.01);
+
+      const totalBeats = pattern.reduce((s, n) => s + n.beats, 0);
+      let pos = 0;
+      for (let i = 0; i < noteIndex; i++) pos += pattern[i].beats;
+      const pct = pos / totalBeats * 100;
+
+      const delay = (time - audioCtx.currentTime) * 1000;
+      setTimeout(() => {
+        if (!playing) return;
+        playhead.style.left = pct + '%';
+        flash.classList.add('on');
+        setTimeout(() => flash.classList.remove('on'), 60);
+        highlightCell(noteIndex);
+      }, Math.max(0, delay));
+    }
+
+    function highlightCell(noteIndex) {
+      document.querySelectorAll('.beat-cell').forEach(c => c.classList.remove('active'));
+      const cells = document.querySelectorAll('.beat-cell');
+      if (cells[noteIndex]) cells[noteIndex].classList.add('active');
+    }
+
+    function saveState() {
+      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars }));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem('metronome');
+      if (saved) {
+        const s = JSON.parse(saved);
+        bars = s.bars || [[], []];
+        tempo = s.tempo || 120;
+        volume = s.volume !== undefined ? s.volume : 0.8;
+        speedUpBpm = s.speedUpBpm || 0;
+        speedUpBars = s.speedUpBars || 4;
+      } else {
+        bars[0] = [{type:'crotchet',note:'',bend:0},{type:'crotchet',note:'',bend:0},{type:'crotchet',note:'',bend:0},{type:'crotchet',note:'',bend:0}];
+      }
+      tempoSlider.value = tempo;
+      tempoInput.value = tempo;
+      volSlider.value = Math.round(volume * 100);
+      volDisplay.textContent = Math.round(volume * 100) + '%';
+      speedUpBpmInput.value = speedUpBpm;
+      speedUpBarsInput.value = speedUpBars;
+    }
+
+    loadState();
+    renderBars();
+  </script>
+</body>
+</html>
