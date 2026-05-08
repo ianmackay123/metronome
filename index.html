@@ -1673,7 +1673,7 @@
     }
 
     function saveState() {
-      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars, activePresetIndex }));
+      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars, activePresetIndex, editMode }));
       if (activePresetIndex !== null) savePresetOverride(activePresetIndex);
     }
 
@@ -1687,6 +1687,7 @@
         speedUpBpm = s.speedUpBpm || 0;
         speedUpBars = s.speedUpBars || 4;
         activePresetIndex = s.activePresetIndex !== undefined ? s.activePresetIndex : null;
+        editMode = s.editMode || false;
       } else {
         bars = [[{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0},{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0}],[]];
         tempo = 120;
@@ -1811,6 +1812,7 @@
       const btns = document.getElementById('presetsRow').querySelectorAll('.preset-btn');
       if (btns[activePresetIndex]) btns[activePresetIndex].classList.add('active');
     }
+    if (editMode) enterEditMode(false);
   </script>
 </body>
 </html>
