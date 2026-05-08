@@ -988,11 +988,13 @@
     });
 
     function noteBarColor(beats) {
-      // Map beats (0.167–4) to red shades: shorter=bright, longer=deep/dark
-      const t = Math.min(beats, 4) / 4; // 0..1
-      const r = Math.round(255 - t * 155); // 255 → 100
-      const g = Math.round(100 - t * 90);  // 100 → 10
-      const b = Math.round(110 - t * 100); // 110 → 10
+      // Log scale so short notes (0.17–0.5) spread out visually
+      const minB = 1/6, maxB = 4;
+      const t = (Math.log(beats) - Math.log(minB)) / (Math.log(maxB) - Math.log(minB));
+      const clamped = Math.max(0, Math.min(1, t));
+      const r = Math.round(255 - clamped * 155); // 255 → 100
+      const g = Math.round(100 - clamped * 90);  // 100 → 10
+      const b = Math.round(110 - clamped * 100); // 110 → 10
       return `rgb(${r},${g},${b})`;
     }
 
