@@ -313,9 +313,7 @@
       width: 90%;
       height: 100%;
       border-radius: 3px;
-      background: #e94560;
     }
-    .beat-cell.accent .note-bar { background: #ff6b6b; }
     .beat-cell .note-label {
       font-family: 'Noto Music', 'Noto Sans Symbols2', 'Segoe UI Symbol', 'Apple Symbols', serif;
       font-size: 2.4rem;
@@ -989,6 +987,15 @@
       if (playing) { stop(); } else { start(); }
     });
 
+    function noteBarColor(beats) {
+      // Map beats (0.167–4) to red shades: shorter=brighter, longer=deeper
+      const t = Math.min(beats, 4) / 4; // 0..1
+      const r = Math.round(255 - t * 90);  // 255 → 165
+      const g = Math.round(80 - t * 50);   // 80 → 30
+      const b = Math.round(90 - t * 50);   // 90 → 40
+      return `rgb(${r},${g},${b})`;
+    }
+
     function renderBars() {
       for (let b = 0; b < 2; b++) {
         const wrapper = document.getElementById(`bar${b}Wrapper`);
@@ -1021,9 +1028,10 @@
           const cell = document.createElement('div');
           cell.className = 'beat-cell' + (i === 0 && b === 0 && !isRest ? ' accent' : '');
           cell.style.flex = `${NOTE_TYPES[type].beats} 1 0`;
+          const barColor = isRest ? '#555' : noteBarColor(NOTE_TYPES[type].beats);
           if (isRest) {
             cell.innerHTML = `
-              <div class="note-bar" style="background:#555"><button class="remove-btn">&times;</button></div>
+              <div class="note-bar" style="background:${barColor}"><button class="remove-btn">&times;</button></div>
               <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>
               <span class="note-name">${NOTE_TYPES[type].name}</span>
               <span></span>
@@ -1031,7 +1039,7 @@
             `;
           } else {
             cell.innerHTML = `
-              <div class="note-bar"><button class="remove-btn">&times;</button></div>
+              <div class="note-bar" style="background:${barColor}"><button class="remove-btn">&times;</button></div>
               <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>
               <span class="note-name">${NOTE_TYPES[type].name}</span>
               <input class="pitch-input" type="text" value="${note}" placeholder="C4" maxlength="3">
