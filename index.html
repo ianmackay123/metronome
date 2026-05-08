@@ -181,6 +181,26 @@
       padding-top: 0.4rem;
     }
     .palette-body.open { display: block; }
+    .add-row {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+      gap: 1.5rem;
+    }
+    .add-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .add-group .add-buttons {
+      margin-bottom: 0;
+    }
+    .add-group-label {
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #777;
+      margin-bottom: 0.2rem;
+    }
     .add-buttons {
       display: flex;
       gap: 0.3rem;
@@ -715,47 +735,47 @@
             <span class="arrow">&#9660;</span>
           </div>
           <div class="palette-body open" data-bar="0">
-            <div class="add-section-label">Notes</div>
-            <div class="add-buttons">
-              <button data-bar="0" data-type="semibreve">𝅝</button>
-              <button data-bar="0" data-type="minim">𝅗𝅥</button>
-              <button data-bar="0" data-type="crotchet">𝅘𝅥</button>
-              <button data-bar="0" data-type="quaver">𝅘𝅥𝅮</button>
-              <button data-bar="0" data-type="semiquaver">𝅘𝅥𝅯</button>
+            <div class="add-row">
+              <div class="add-group"><div class="add-group-label">Notes</div><div class="add-buttons">
+                <button data-bar="0" data-type="semibreve">𝅝</button>
+                <button data-bar="0" data-type="minim">𝅗𝅥</button>
+                <button data-bar="0" data-type="crotchet">𝅘𝅥</button>
+                <button data-bar="0" data-type="quaver">𝅘𝅥𝅮</button>
+                <button data-bar="0" data-type="semiquaver">𝅘𝅥𝅯</button>
+              </div></div>
+              <div class="add-group"><div class="add-group-label">Rests</div><div class="add-buttons">
+                <button data-bar="0" data-type="semibreve_rest">𝄻</button>
+                <button data-bar="0" data-type="minim_rest">𝄼</button>
+                <button data-bar="0" data-type="crotchet_rest">𝄽</button>
+                <button data-bar="0" data-type="quaver_rest">𝄾</button>
+                <button data-bar="0" data-type="semiquaver_rest">𝄿</button>
+              </div></div>
             </div>
-            <div class="add-section-label">Dotted</div>
-            <div class="add-buttons">
-              <button data-bar="0" data-type="dotted_minim">𝅗𝅥.</button>
-              <button data-bar="0" data-type="dotted_crotchet">𝅘𝅥.</button>
-              <button data-bar="0" data-type="dotted_quaver">𝅘𝅥𝅮.</button>
-              <button data-bar="0" data-type="dotted_semiquaver">𝅘𝅥𝅯.</button>
+            <div class="add-row">
+              <div class="add-group"><div class="add-group-label">Dotted</div><div class="add-buttons">
+                <button data-bar="0" data-type="dotted_minim">𝅗𝅥.</button>
+                <button data-bar="0" data-type="dotted_crotchet">𝅘𝅥.</button>
+                <button data-bar="0" data-type="dotted_quaver">𝅘𝅥𝅮.</button>
+                <button data-bar="0" data-type="dotted_semiquaver">𝅘𝅥𝅯.</button>
+              </div></div>
+              <div class="add-group"><div class="add-group-label">Dotted Rests</div><div class="add-buttons">
+                <button data-bar="0" data-type="dotted_minim_rest">𝄼.</button>
+                <button data-bar="0" data-type="dotted_crotchet_rest">𝄽.</button>
+                <button data-bar="0" data-type="dotted_quaver_rest">𝄾.</button>
+                <button data-bar="0" data-type="dotted_semiquaver_rest">𝄿.</button>
+              </div></div>
             </div>
-            <div class="add-section-label">Rests</div>
-            <div class="add-buttons">
-              <button data-bar="0" data-type="semibreve_rest">𝄻</button>
-              <button data-bar="0" data-type="minim_rest">𝄼</button>
-              <button data-bar="0" data-type="crotchet_rest">𝄽</button>
-              <button data-bar="0" data-type="quaver_rest">𝄾</button>
-              <button data-bar="0" data-type="semiquaver_rest">𝄿</button>
-            </div>
-            <div class="add-section-label">Dotted Rests</div>
-            <div class="add-buttons">
-              <button data-bar="0" data-type="dotted_minim_rest">𝄼.</button>
-              <button data-bar="0" data-type="dotted_crotchet_rest">𝄽.</button>
-              <button data-bar="0" data-type="dotted_quaver_rest">𝄾.</button>
-              <button data-bar="0" data-type="dotted_semiquaver_rest">𝄿.</button>
-            </div>
-            <div class="add-section-label">Triplets</div>
-            <div class="add-buttons">
-              <button data-bar="0" data-type="triplet_crotchet">𝅘𝅥³</button>
-              <button data-bar="0" data-type="triplet_quaver">𝅘𝅥𝅮³</button>
-              <button data-bar="0" data-type="triplet_semiquaver">𝅘𝅥𝅯³</button>
-            </div>
-            <div class="add-section-label">Triplet Rests</div>
-            <div class="add-buttons">
-              <button data-bar="0" data-type="triplet_crotchet_rest">𝄽³</button>
-              <button data-bar="0" data-type="triplet_quaver_rest">𝄾³</button>
-              <button data-bar="0" data-type="triplet_semiquaver_rest">𝄿³</button>
+            <div class="add-row">
+              <div class="add-group"><div class="add-group-label">Triplets</div><div class="add-buttons">
+                <button data-bar="0" data-type="triplet_crotchet">𝅘𝅥³</button>
+                <button data-bar="0" data-type="triplet_quaver">𝅘𝅥𝅮³</button>
+                <button data-bar="0" data-type="triplet_semiquaver">𝅘𝅥𝅯³</button>
+              </div></div>
+              <div class="add-group"><div class="add-group-label">Triplet Rests</div><div class="add-buttons">
+                <button data-bar="0" data-type="triplet_crotchet_rest">𝄽³</button>
+                <button data-bar="0" data-type="triplet_quaver_rest">𝄾³</button>
+                <button data-bar="0" data-type="triplet_semiquaver_rest">𝄿³</button>
+              </div></div>
             </div>
           </div>
         </div>
@@ -775,47 +795,47 @@
             <span class="arrow">&#9660;</span>
           </div>
           <div class="palette-body" data-bar="1">
-            <div class="add-section-label">Notes</div>
-            <div class="add-buttons">
-              <button data-bar="1" data-type="semibreve">𝅝</button>
-              <button data-bar="1" data-type="minim">𝅗𝅥</button>
-              <button data-bar="1" data-type="crotchet">𝅘𝅥</button>
-              <button data-bar="1" data-type="quaver">𝅘𝅥𝅮</button>
-              <button data-bar="1" data-type="semiquaver">𝅘𝅥𝅯</button>
+            <div class="add-row">
+              <div class="add-group"><div class="add-group-label">Notes</div><div class="add-buttons">
+                <button data-bar="1" data-type="semibreve">𝅝</button>
+                <button data-bar="1" data-type="minim">𝅗𝅥</button>
+                <button data-bar="1" data-type="crotchet">𝅘𝅥</button>
+                <button data-bar="1" data-type="quaver">𝅘𝅥𝅮</button>
+                <button data-bar="1" data-type="semiquaver">𝅘𝅥𝅯</button>
+              </div></div>
+              <div class="add-group"><div class="add-group-label">Rests</div><div class="add-buttons">
+                <button data-bar="1" data-type="semibreve_rest">𝄻</button>
+                <button data-bar="1" data-type="minim_rest">𝄼</button>
+                <button data-bar="1" data-type="crotchet_rest">𝄽</button>
+                <button data-bar="1" data-type="quaver_rest">𝄾</button>
+                <button data-bar="1" data-type="semiquaver_rest">𝄿</button>
+              </div></div>
             </div>
-            <div class="add-section-label">Dotted</div>
-            <div class="add-buttons">
-              <button data-bar="1" data-type="dotted_minim">𝅗𝅥.</button>
-              <button data-bar="1" data-type="dotted_crotchet">𝅘𝅥.</button>
-              <button data-bar="1" data-type="dotted_quaver">𝅘𝅥𝅮.</button>
-              <button data-bar="1" data-type="dotted_semiquaver">𝅘𝅥𝅯.</button>
+            <div class="add-row">
+              <div class="add-group"><div class="add-group-label">Dotted</div><div class="add-buttons">
+                <button data-bar="1" data-type="dotted_minim">𝅗𝅥.</button>
+                <button data-bar="1" data-type="dotted_crotchet">𝅘𝅥.</button>
+                <button data-bar="1" data-type="dotted_quaver">𝅘𝅥𝅮.</button>
+                <button data-bar="1" data-type="dotted_semiquaver">𝅘𝅥𝅯.</button>
+              </div></div>
+              <div class="add-group"><div class="add-group-label">Dotted Rests</div><div class="add-buttons">
+                <button data-bar="1" data-type="dotted_minim_rest">𝄼.</button>
+                <button data-bar="1" data-type="dotted_crotchet_rest">𝄽.</button>
+                <button data-bar="1" data-type="dotted_quaver_rest">𝄾.</button>
+                <button data-bar="1" data-type="dotted_semiquaver_rest">𝄿.</button>
+              </div></div>
             </div>
-            <div class="add-section-label">Rests</div>
-            <div class="add-buttons">
-              <button data-bar="1" data-type="semibreve_rest">𝄻</button>
-              <button data-bar="1" data-type="minim_rest">𝄼</button>
-              <button data-bar="1" data-type="crotchet_rest">𝄽</button>
-              <button data-bar="1" data-type="quaver_rest">𝄾</button>
-              <button data-bar="1" data-type="semiquaver_rest">𝄿</button>
-            </div>
-            <div class="add-section-label">Dotted Rests</div>
-            <div class="add-buttons">
-              <button data-bar="1" data-type="dotted_minim_rest">𝄼.</button>
-              <button data-bar="1" data-type="dotted_crotchet_rest">𝄽.</button>
-              <button data-bar="1" data-type="dotted_quaver_rest">𝄾.</button>
-              <button data-bar="1" data-type="dotted_semiquaver_rest">𝄿.</button>
-            </div>
-            <div class="add-section-label">Triplets</div>
-            <div class="add-buttons">
-              <button data-bar="1" data-type="triplet_crotchet">𝅘𝅥³</button>
-              <button data-bar="1" data-type="triplet_quaver">𝅘𝅥𝅮³</button>
-              <button data-bar="1" data-type="triplet_semiquaver">𝅘𝅥𝅯³</button>
-            </div>
-            <div class="add-section-label">Triplet Rests</div>
-            <div class="add-buttons">
-              <button data-bar="1" data-type="triplet_crotchet_rest">𝄽³</button>
-              <button data-bar="1" data-type="triplet_quaver_rest">𝄾³</button>
-              <button data-bar="1" data-type="triplet_semiquaver_rest">𝄿³</button>
+            <div class="add-row">
+              <div class="add-group"><div class="add-group-label">Triplets</div><div class="add-buttons">
+                <button data-bar="1" data-type="triplet_crotchet">𝅘𝅥³</button>
+                <button data-bar="1" data-type="triplet_quaver">𝅘𝅥𝅮³</button>
+                <button data-bar="1" data-type="triplet_semiquaver">𝅘𝅥𝅯³</button>
+              </div></div>
+              <div class="add-group"><div class="add-group-label">Triplet Rests</div><div class="add-buttons">
+                <button data-bar="1" data-type="triplet_crotchet_rest">𝄽³</button>
+                <button data-bar="1" data-type="triplet_quaver_rest">𝄾³</button>
+                <button data-bar="1" data-type="triplet_semiquaver_rest">𝄿³</button>
+              </div></div>
             </div>
           </div>
         </div>
