@@ -18,6 +18,7 @@
       background: #1a1a2e;
       color: #eee;
       min-height: 100vh;
+      overflow-x: hidden;
     }
     .app {
       max-width: 1100px;
@@ -101,7 +102,7 @@
     .app.edit-mode .beat-cell .remove-btn { display: flex !important; }
     .beat-cell .pitch-input,
     .beat-cell .bend-row { display: none; }
-    .app.edit-mode .beat-cell { grid-template-rows: 44px 2.4rem 0.9rem 30px 30px; min-width: 54px; }
+    .app.edit-mode .beat-cell { grid-template-rows: 44px 2.4rem 0.9rem 30px 30px; }
     .app.edit-mode .beat-cell .pitch-input { display: block; }
     .app.edit-mode .beat-cell .bend-row { display: flex; }
     .edit-bar {
@@ -253,8 +254,6 @@
       min-width: 0;
       overflow: hidden;
     }
-    .app.edit-mode .beat-grid { overflow: visible; }
-    .app.edit-mode .bar-grid-wrapper { overflow-x: auto; }
     .beat-cell {
       display: grid;
       grid-template-rows: 44px 2.4rem 0.9rem 0 0;
@@ -330,7 +329,8 @@
       margin-top: 1px;
     }
     .beat-cell .pitch-input {
-      width: 38px;
+      width: 100%;
+      max-width: 38px;
       height: 20px;
       font-size: 0.85rem;
       text-align: center;
@@ -338,7 +338,7 @@
       border-radius: 3px;
       background: #0f3460;
       color: #eee;
-      padding: 0 2px;
+      padding: 0 1px;
     }
     .beat-cell .pitch-input:focus {
       outline: 1px solid #e94560;
@@ -347,10 +347,13 @@
     .beat-cell .bend-row {
       display: flex;
       align-items: center;
-      gap: 2px;
+      gap: 1px;
+      width: 100%;
+      max-width: 54px;
     }
     .beat-cell .bend-dir {
-      width: 20px;
+      width: 18px;
+      min-width: 14px;
       height: 20px;
       border: 1px solid #444;
       border-radius: 3px;
@@ -363,10 +366,12 @@
       justify-content: center;
       padding: 0;
       line-height: 1;
+      flex-shrink: 0;
     }
     .beat-cell .bend-dir:hover { background: #1a5276; }
     .beat-cell .bend-input {
-      width: 30px;
+      width: 100%;
+      min-width: 0;
       height: 20px;
       font-size: 0.78rem;
       text-align: center;
@@ -374,7 +379,7 @@
       border-radius: 3px;
       background: #0f3460;
       color: #ff8a5c;
-      padding: 0 2px;
+      padding: 0 1px;
     }
     .beat-cell .bend-input:focus {
       outline: 1px solid #ff8a5c;
@@ -538,8 +543,6 @@
       min-width: 0;
       overflow: hidden;
     }
-    .app.edit-mode .tab-grid { overflow: visible; }
-    .app.edit-mode .tab-cell { min-width: 54px; }
     .tab-cell {
       display: flex;
       flex-direction: column;
@@ -629,9 +632,9 @@
       .beat-cell { padding: 2px; }
       .beat-cell .note-label { font-size: 1.8rem; height: 1.8rem; width: 1.6rem; }
       .beat-cell .note-name { font-size: 0.5rem; }
-      .beat-cell .pitch-input { width: 32px; font-size: 0.75rem; }
-      .beat-cell .bend-input { width: 26px; font-size: 0.7rem; }
-      .beat-cell .bend-dir { width: 18px; height: 18px; font-size: 0.7rem; }
+      .beat-cell .pitch-input { max-width: 32px; font-size: 0.75rem; }
+      .beat-cell .bend-input { font-size: 0.7rem; }
+      .beat-cell .bend-dir { min-width: 12px; width: 14px; height: 18px; font-size: 0.7rem; }
       .tab-cell span { font-size: 1rem; height: 1.3rem; }
       .tab-labels { display: none; }
       .tab-grid-wrapper { margin-top: 1rem; padding-top: 0.5rem; }
