@@ -283,8 +283,7 @@
       display: grid;
       grid-template-rows: 44px 2.4rem 0.9rem 22px 22px;
       align-items: center;
-      padding-right: 6px;
-      padding: 4px 6px 4px 0;
+      width: 16px;
       flex-shrink: 0;
     }
     .bar-labels span {
@@ -292,6 +291,9 @@
       color: #777;
       text-align: right;
       white-space: nowrap;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      justify-self: center;
     }
     .beat-cell:hover { background: rgba(233,69,96,0.15); }
     .beat-cell.active { background: rgba(233,69,96,0.35); }
