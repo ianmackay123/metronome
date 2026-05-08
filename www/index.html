@@ -118,7 +118,7 @@
       line-height: 1;
     }
     .app.edit-mode .beat-cell .bend-indicator { display: none; }
-    .app.edit-mode .beat-cell { grid-template-rows: 22px 2.4rem 0 24px 38px; }
+    .app.edit-mode .beat-cell { grid-template-rows: 22px 2.4rem 6px 24px 38px; }
     .app.edit-mode .beat-cell .pitch-input { display: block !important; }
     .app.edit-mode .beat-cell .bend-row { display: flex !important; }
     .edit-bar {
@@ -318,7 +318,7 @@
     }
     .app.edit-mode .bar-labels {
       display: grid;
-      grid-template-rows: 22px 2.4rem 0 24px 38px;
+      grid-template-rows: 22px 2.4rem 6px 24px 38px;
       align-items: center;
       position: absolute;
       right: 100%;
@@ -664,8 +664,8 @@
       .beat-cell .note-label { font-size: 1.8rem; height: 1.8rem; width: 1.6rem; }
       .app.edit-mode .beat-cell .note-name { font-size: 0.5rem; }
       .beat-cell .pitch-input { max-width: 32px; font-size: 0.75rem; }
-      .beat-cell .bend-input { font-size: 0.7rem; }
-      .beat-cell .bend-dir { min-width: 12px; width: 14px; height: 18px; font-size: 0.7rem; }
+      .beat-cell .bend-input { font-size: 0.65rem; max-width: 24px; }
+      .beat-cell .bend-dir { max-width: 24px; height: 14px; font-size: 0.6rem; }
       .tab-cell span { font-size: 1rem; height: 1.3rem; }
       .tab-labels { font-size: 0.7rem; }
       .tab-labels span { font-size: 0.7rem; height: 1.3rem; }
