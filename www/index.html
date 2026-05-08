@@ -118,7 +118,7 @@
       line-height: 1;
     }
     .app.edit-mode .beat-cell .bend-indicator { display: none; }
-    .app.edit-mode .beat-cell { grid-template-rows: 22px 2.4rem 4px 30px 44px; }
+    .app.edit-mode .beat-cell { grid-template-rows: 22px 2.4rem 6px auto auto; }
     .app.edit-mode .beat-cell .pitch-input { display: block !important; }
     .app.edit-mode .beat-cell .bend-row { display: flex !important; }
     .edit-bar {
@@ -318,7 +318,7 @@
     }
     .app.edit-mode .bar-labels {
       display: grid;
-      grid-template-rows: 22px 2.4rem 4px 30px 44px;
+      grid-template-rows: 22px 2.4rem 6px auto auto;
       align-items: center;
       position: absolute;
       right: 100%;
@@ -363,7 +363,7 @@
     .beat-cell .pitch-input {
       width: 100%;
       max-width: 38px;
-      height: 20px;
+      height: 22px;
       font-size: 0.85rem;
       text-align: center;
       border: 1px solid #444;
@@ -371,6 +371,7 @@
       background: #0f3460;
       color: #eee;
       padding: 0 1px;
+      margin-bottom: 4px;
     }
     .beat-cell .pitch-input:focus {
       outline: 1px solid #e94560;
