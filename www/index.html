@@ -204,13 +204,17 @@
       align-items: flex-start;
       margin-bottom: 0.5rem;
       gap: 1.5rem;
+      flex-wrap: nowrap;
     }
     .add-group {
       display: flex;
       flex-direction: column;
+      flex-shrink: 1;
+      min-width: 0;
     }
     .add-group .add-buttons {
       margin-bottom: 0;
+      flex-wrap: nowrap;
     }
     .add-group-label {
       font-size: 0.55rem;
@@ -234,7 +238,7 @@
       margin-bottom: 0.15rem;
     }
     .add-buttons button {
-      padding: 0.25rem 0.5rem;
+      padding: 0.25rem 0.4rem;
       border: 1px solid #444;
       border-radius: 4px;
       background: #0f3460;
@@ -243,6 +247,8 @@
       font-family: 'Noto Music', 'Noto Sans Symbols2', 'Segoe UI Symbol', 'Apple Symbols', -apple-system, sans-serif;
       font-size: 1.7rem;
       transition: background 0.15s;
+      flex-shrink: 1;
+      min-width: 0;
     }
     .add-buttons button:hover { background: #1a5276; }
     .bar-container {
