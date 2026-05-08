@@ -202,8 +202,9 @@
     .add-row {
       display: flex;
       align-items: flex-start;
+      justify-content: space-between;
       margin-bottom: 0.5rem;
-      gap: 1.5rem;
+      gap: 1rem;
       flex-wrap: nowrap;
     }
     .add-group {
@@ -211,6 +212,12 @@
       flex-direction: column;
       flex-shrink: 1;
       min-width: 0;
+    }
+    .add-group:last-child {
+      align-items: flex-end;
+    }
+    .add-group:last-child .add-buttons {
+      justify-content: flex-end;
     }
     .add-group .add-buttons {
       margin-bottom: 0;
