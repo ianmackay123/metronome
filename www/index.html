@@ -141,7 +141,11 @@
       background: #0f3460;
       color: #eee;
       font-size: 0.85rem;
+      min-width: 0;
     }
+    .edit-bar input[type="text"] { width: 100px; max-width: 30vw; }
+    .edit-bar input[type="number"] { width: 45px; max-width: 15vw; }
+    .edit-bar select { max-width: 25vw; }
     .edit-bar .save-btn {
       padding: 0.4rem 1rem;
       border: none;
@@ -683,7 +687,7 @@
 
     <div class="edit-bar" id="editBar">
       <label>Name</label>
-      <input type="text" id="editName" placeholder="Preset name" style="width:120px;">
+      <input type="text" id="editName" placeholder="Preset name">
       <label>Key</label>
       <select id="editKey">
         <option value="Am">Am</option>
@@ -700,7 +704,7 @@
         <option value="G#m">G#m/Abm</option>
       </select>
       <label>Box</label>
-      <input type="number" id="editBox" min="1" max="5" value="1" style="width:50px;">
+      <input type="number" id="editBox" min="1" max="5" value="1">
       <button class="save-btn" id="editSaveBtn">Save</button>
       <button class="cancel-btn" id="editCancelBtn">Cancel</button>
       <button class="delete-btn" id="editDeleteBtn">Delete</button>
