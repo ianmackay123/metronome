@@ -40,11 +40,6 @@
       gap: 1rem;
       align-items: flex-start;
     }
-    .bar-row .note-palette {
-      flex-shrink: 0;
-      width: 220px;
-      margin-bottom: 0;
-    }
     .bar-row .bar-grid-wrapper {
       flex: 1;
       min-width: 0;
@@ -589,9 +584,6 @@
       .bar-row {
         flex-direction: column;
       }
-      .bar-row .note-palette {
-        width: 100%;
-      }
       .app { padding: 0.8rem; }
       h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
       .controls { margin-bottom: 0.8rem; }
@@ -729,7 +721,9 @@
         <span class="bar-beats-info" id="bar0Info"></span>
       </div>
       <div class="bar-row">
-        <div class="note-palette">
+        <div class="bar-grid-wrapper" id="bar0Wrapper"></div>
+      </div>
+      <div class="note-palette">
           <div class="palette-toggle open" data-bar="0">
             <h3>Add Notes</h3>
             <span class="arrow">&#9660;</span>
@@ -779,8 +773,6 @@
             </div>
           </div>
         </div>
-        <div class="bar-grid-wrapper" id="bar0Wrapper"></div>
-      </div>
     </div>
 
     <div class="bar-container" id="bar1Container">
@@ -789,7 +781,9 @@
         <span class="bar-beats-info" id="bar1Info"></span>
       </div>
       <div class="bar-row">
-        <div class="note-palette">
+        <div class="bar-grid-wrapper" id="bar1Wrapper"></div>
+      </div>
+      <div class="note-palette">
           <div class="palette-toggle" data-bar="1">
             <h3>Add Notes</h3>
             <span class="arrow">&#9660;</span>
@@ -839,8 +833,6 @@
             </div>
           </div>
         </div>
-        <div class="bar-grid-wrapper" id="bar1Wrapper"></div>
-      </div>
     </div>
 
   <script>
