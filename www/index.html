@@ -988,11 +988,11 @@
     });
 
     function noteBarColor(beats) {
-      // Map beats (0.167–4) to red shades: shorter=brighter, longer=deeper
+      // Map beats (0.167–4) to red shades: shorter=bright, longer=deep/dark
       const t = Math.min(beats, 4) / 4; // 0..1
-      const r = Math.round(255 - t * 90);  // 255 → 165
-      const g = Math.round(80 - t * 50);   // 80 → 30
-      const b = Math.round(90 - t * 50);   // 90 → 40
+      const r = Math.round(255 - t * 155); // 255 → 100
+      const g = Math.round(100 - t * 90);  // 100 → 10
+      const b = Math.round(110 - t * 100); // 110 → 10
       return `rgb(${r},${g},${b})`;
     }
 
