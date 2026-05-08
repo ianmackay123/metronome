@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Speed Trainer</string>
+    <string name="title_activity_main">Speed Trainer</string>
+    <string name="package_name">com.metronome.speedtrainer</string>
+    <string name="custom_url_scheme">com.metronome.speedtrainer</string>
+</resources>

@@ -1,0 +1,26 @@
+{
+  "name": "metronome-speed-trainer",
+  "version": "1.0.0",
+  "description": "Guitar metronome speed trainer with TAB notation",
+  "main": "www/index.html",
+  "scripts": {
+    "sync": "cap sync",
+    "ios": "cap open ios",
+    "android": "cap open android"
+  },
+  "author": "Ian Mackay",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.3.2",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^7.6.3",
+    "@capacitor/core": "^8.3.2",
+    "@capacitor/ios": "^8.3.2",
+    "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
