@@ -296,6 +296,7 @@
     .beat-cell:hover { background: rgba(233,69,96,0.15); }
     .beat-cell.active { background: rgba(233,69,96,0.35); }
     .beat-cell .note-bar {
+      position: relative;
       width: 90%;
       height: 100%;
       border-radius: 3px;
@@ -373,20 +374,22 @@
     }
     .beat-cell .remove-btn {
       position: absolute;
-      top: -4px;
-      right: -4px;
-      width: 14px;
-      height: 14px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
-      background: #e94560;
+      background: rgba(0,0,0,0.6);
       color: white;
-      font-size: 9px;
+      font-size: 10px;
       border: none;
       cursor: pointer;
       display: none;
       align-items: center;
       justify-content: center;
       line-height: 1;
+      z-index: 2;
     }
     .controls {
       display: flex;
@@ -1001,16 +1004,15 @@
           cell.style.flex = `${NOTE_TYPES[type].beats} 1 0`;
           if (isRest) {
             cell.innerHTML = `
-              <div class="note-bar" style="background:#555"></div>
+              <div class="note-bar" style="background:#555"><button class="remove-btn">&times;</button></div>
               <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>
               <span class="note-name">${NOTE_TYPES[type].name}</span>
               <span></span>
               <span></span>
-              <button class="remove-btn">&times;</button>
             `;
           } else {
             cell.innerHTML = `
-              <div class="note-bar"></div>
+              <div class="note-bar"><button class="remove-btn">&times;</button></div>
               <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>
               <span class="note-name">${NOTE_TYPES[type].name}</span>
               <input class="pitch-input" type="text" value="${note}" placeholder="C4" maxlength="3">
@@ -1018,7 +1020,6 @@
                 <button class="bend-dir" title="Toggle bend direction">${bendUp ? '↑' : '↓'}</button>
                 <input class="bend-input" type="number" value="${bendAbs}" placeholder="0" min="0" max="24">
               </div>
-              <button class="remove-btn">&times;</button>
             `;
             cell.querySelector('.pitch-input').addEventListener('change', (e) => {
               bars[b][i].note = e.target.value;
