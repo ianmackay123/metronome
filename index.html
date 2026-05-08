@@ -58,16 +58,20 @@
     }
     .tempo-section {
       margin-bottom: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
     }
     .tempo-section label {
-      display: block;
-      margin-bottom: 0.4rem;
       font-weight: 600;
+      white-space: nowrap;
+      min-width: 55px;
     }
     .tempo-row {
       display: flex;
       align-items: center;
       gap: 0.8rem;
+      flex: 1;
     }
     .tempo-row input[type="range"] {
       flex: 1;
@@ -101,9 +105,10 @@
     .beat-cell .remove-btn { display: none !important; }
     .app.edit-mode .beat-cell:hover .remove-btn { display: flex !important; }
     .beat-cell .pitch-input,
-    .beat-cell .bend-row { pointer-events: none; opacity: 0.6; }
-    .app.edit-mode .beat-cell .pitch-input,
-    .app.edit-mode .beat-cell .bend-row { pointer-events: auto; opacity: 1; }
+    .beat-cell .bend-row { display: none; }
+    .app.edit-mode .beat-cell { grid-template-rows: 44px 2.4rem 0.9rem 22px 22px; }
+    .app.edit-mode .beat-cell .pitch-input { display: block; }
+    .app.edit-mode .beat-cell .bend-row { display: flex; }
     .edit-bar {
       display: none;
       align-items: center;
@@ -235,7 +240,7 @@
     }
     .beat-cell {
       display: grid;
-      grid-template-rows: 44px 2.4rem 0.9rem 22px 22px;
+      grid-template-rows: 44px 2.4rem 0.9rem 0 0;
       align-items: center;
       justify-items: start;
       cursor: pointer;
@@ -258,6 +263,9 @@
       width: 100%;
     }
     .bar-labels {
+      display: none;
+    }
+    .app.edit-mode .bar-labels {
       display: grid;
       grid-template-rows: 44px 2.4rem 0.9rem 22px 22px;
       align-items: center;
@@ -435,12 +443,13 @@
     .visualizer .flash {
       position: absolute;
       top: 0;
-      left: 0;
-      right: 0;
       bottom: 0;
-      background: rgba(233,69,96,0.3);
+      width: 80px;
+      margin-left: -40px;
+      background: radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0) 70%);
       opacity: 0;
-      transition: opacity 0.05s;
+      transition: opacity 0.12s ease-out;
+      pointer-events: none;
     }
     .visualizer .flash.on { opacity: 1; transition: none; }
 
@@ -541,6 +550,20 @@
       outline: none;
     }
 
+    button, select, input { touch-action: manipulation; }
+
+    .presets-select {
+      display: none;
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #444;
+      border-radius: 6px;
+      background: #16213e;
+      color: #eee;
+      font-size: 1rem;
+      appearance: auto;
+    }
+
     @media (max-width: 700px) {
       .bar-row {
         flex-direction: column;
@@ -549,14 +572,56 @@
         width: 100%;
       }
       .app { padding: 0.8rem; }
-      h1 { font-size: 1.3rem; margin-bottom: 0.6rem; }
+      h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
       .controls { margin-bottom: 0.8rem; }
+      .presets-row { display: none; }
+      .presets-select { display: block; }
+      .settings-row {
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .settings-row .tempo-section {
+        min-width: 100%;
+      }
+      .tab-cell span { font-size: 1.2rem; height: 1.5rem; }
+      .tab-labels span { font-size: 0.85rem; height: 1.5rem; }
+      .edit-bar {
+        gap: 0.5rem;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.8rem;
+      }
+      .edit-bar label { font-size: 0.75rem; }
     }
 
     @media (max-width: 480px) {
-      .settings-row { gap: 0.8rem; }
-      .tempo-row { flex-wrap: wrap; gap: 0.4rem; }
-      .tempo-row input[type="range"] { flex: 1 1 100%; }
+      .app { padding: 0.5rem; }
+      h1 { font-size: 1.1rem; margin-bottom: 0.4rem; }
+      .controls { gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+      .controls button { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
+      .count-in-btn { width: 38px; height: 38px; font-size: 1rem; }
+      .visualizer { height: 30px; }
+      .bar-container { padding: 0.6rem; }
+      .beat-cell { padding: 2px; }
+      .beat-cell .note-label { font-size: 1.8rem; height: 1.8rem; width: 1.6rem; }
+      .beat-cell .note-name { font-size: 0.5rem; }
+      .beat-cell .pitch-input { width: 32px; font-size: 0.75rem; }
+      .beat-cell .bend-input { width: 26px; font-size: 0.7rem; }
+      .beat-cell .bend-dir { width: 18px; height: 18px; font-size: 0.7rem; }
+      .tab-cell span { font-size: 1rem; height: 1.3rem; }
+      .tab-labels span { font-size: 0.75rem; height: 1.3rem; }
+      .tab-grid-wrapper { margin-top: 1rem; padding-top: 0.5rem; }
+      .add-buttons button { font-size: 1.3rem; padding: 0.2rem 0.4rem; }
+      .edit-bar { gap: 0.4rem; padding: 0.4rem; }
+      .edit-bar select, .edit-bar input[type="text"], .edit-bar input[type="number"] {
+        padding: 0.25rem 0.3rem;
+        font-size: 0.8rem;
+      }
+      .edit-bar .save-btn, .edit-bar .cancel-btn, .edit-bar .delete-btn {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.8rem;
+      }
+      .settings-row { gap: 0.5rem; }
+      .tempo-section label { font-size: 0.8rem; margin-bottom: 0.2rem; }
     }
   </style>
 </head>
@@ -601,6 +666,7 @@
     <div class="presets-section">
       <label>Presets</label>
       <div class="presets-row" id="presetsRow"></div>
+      <select class="presets-select" id="presetsSelect"><option value="">-- Select preset --</option></select>
     </div>
 
     <div class="visualizer" id="visualizer">
@@ -1103,10 +1169,6 @@
 
         const labels = document.createElement('div');
         labels.className = 'tab-labels';
-        const barLabelsEl = document.getElementById(`bar${b}Wrapper`).querySelector('.bar-labels');
-        if (barLabelsEl) {
-          labels.style.width = barLabelsEl.offsetWidth + 'px';
-        }
         for (let s = 0; s < 6; s++) {
           const sp = document.createElement('span');
           sp.textContent = STRING_NAMES[s];
@@ -1440,7 +1502,7 @@
         if (!playing) return;
         playBtn.textContent = (beat + 1) + '...';
         flash.classList.add('on');
-        setTimeout(() => flash.classList.remove('on'), 60);
+        setTimeout(() => flash.classList.remove('on'), 15);
       }, Math.max(0, delay));
     }
 
@@ -1486,8 +1548,19 @@
         if (!playing) return;
         playhead.style.left = pct + '%';
         if (!note.rest) {
+          if (noteIndex === 0) {
+            flash.style.left = '0';
+            flash.style.width = '100%';
+            flash.style.marginLeft = '0';
+            flash.style.background = 'rgba(255,255,255,1)';
+          } else {
+            flash.style.left = pct + '%';
+            flash.style.width = '80px';
+            flash.style.marginLeft = '-40px';
+            flash.style.background = 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0) 70%)';
+          }
           flash.classList.add('on');
-          setTimeout(() => flash.classList.remove('on'), 60);
+          setTimeout(() => flash.classList.remove('on'), 15);
         }
         highlightCell(noteIndex);
       }, Math.max(0, delay));
@@ -1496,22 +1569,50 @@
 
       const osc = audioCtx.createOscillator();
       osc.type = 'sawtooth';
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'square';
+
       const preGain = audioCtx.createGain();
-      preGain.gain.value = 8;
+      preGain.gain.value = 12;
+      const preGain2 = audioCtx.createGain();
+      preGain2.gain.value = 4;
+
       const distortion = audioCtx.createWaveShaper();
-      distortion.curve = makeDistortionCurve(400);
+      distortion.curve = makeDistortionCurve(600);
       distortion.oversample = '4x';
+
+      const midBoost = audioCtx.createBiquadFilter();
+      midBoost.type = 'peaking';
+      midBoost.frequency.value = 800;
+      midBoost.Q.value = 2;
+      midBoost.gain.value = 8;
+
+      const presence = audioCtx.createBiquadFilter();
+      presence.type = 'peaking';
+      presence.frequency.value = 2500;
+      presence.Q.value = 1.5;
+      presence.gain.value = 4;
+
       const cabinet = audioCtx.createBiquadFilter();
       cabinet.type = 'lowpass';
-      cabinet.frequency.value = 3500;
-      cabinet.Q.value = 0.7;
+      cabinet.frequency.value = 4000;
+      cabinet.Q.value = 1.2;
+
       const highpass = audioCtx.createBiquadFilter();
       highpass.type = 'highpass';
-      highpass.frequency.value = 120;
+      highpass.frequency.value = 80;
+
       const gain = audioCtx.createGain();
+
+      const mixer = audioCtx.createGain();
       osc.connect(preGain);
-      preGain.connect(distortion);
-      distortion.connect(cabinet);
+      osc2.connect(preGain2);
+      preGain.connect(mixer);
+      preGain2.connect(mixer);
+      mixer.connect(distortion);
+      distortion.connect(midBoost);
+      midBoost.connect(presence);
+      presence.connect(cabinet);
       cabinet.connect(highpass);
       highpass.connect(gain);
       gain.connect(audioCtx.destination);
@@ -1519,20 +1620,24 @@
       const baseFreq = note.freq || (isAccent ? 1000 : 800);
       const beatDur = note.beats * (60.0 / tempo);
       const hasBend = note.bend !== 0;
-      const dur = hasBend ? beatDur * 0.9 : Math.min(beatDur * 0.9, 0.08);
+      const dur = hasBend ? beatDur * 0.95 : Math.min(beatDur * 0.95, 0.3);
       osc.frequency.setValueAtTime(baseFreq, time);
+      osc2.frequency.setValueAtTime(baseFreq * 1.002, time);
       if (hasBend) {
         const endFreq = baseFreq * Math.pow(2, note.bend / 12);
         osc.frequency.linearRampToValueAtTime(endFreq, time + dur);
+        osc2.frequency.linearRampToValueAtTime(endFreq * 1.002, time + dur);
       }
       const accentBoost = (noteIndex === 0) ? 1.2 : 1.0;
-      const vol = (isAccent ? 0.4 : 0.26) * volume * accentBoost;
+      const vol = (isAccent ? 0.35 : 0.22) * volume * accentBoost;
       gain.gain.setValueAtTime(vol, time);
-      gain.gain.setValueAtTime(vol, time + dur * 0.7);
-      gain.gain.linearRampToValueAtTime(0.001, time + dur);
+      gain.gain.setValueAtTime(vol, time + dur * 0.75);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
 
       osc.start(time);
+      osc2.start(time);
       osc.stop(time + dur + 0.01);
+      osc2.stop(time + dur + 0.01);
     }
 
     function makeDistortionCurve(amount) {
@@ -1637,7 +1742,9 @@
 
     function renderPresets() {
       const row = document.getElementById('presetsRow');
+      const select = document.getElementById('presetsSelect');
       row.innerHTML = '';
+      select.innerHTML = '<option value="">-- Select preset --</option>';
       const allPresets = [...PRESETS, ...userPresets];
       allPresets.forEach((preset, i) => {
         const container = document.createElement('span');
@@ -1667,8 +1774,20 @@
           container.appendChild(del);
         }
         row.appendChild(container);
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = preset.name;
+        if (i === activePresetIndex) opt.selected = true;
+        select.appendChild(opt);
       });
     }
+
+    document.getElementById('presetsSelect').addEventListener('change', (e) => {
+      const idx = parseInt(e.target.value);
+      if (isNaN(idx)) return;
+      const allPresets = [...PRESETS, ...userPresets];
+      loadPreset(allPresets[idx], idx);
+    });
 
     loadState();
     renderPresets();
