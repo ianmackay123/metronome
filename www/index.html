@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Metronome Speed Trainer</title>
+  <title>Guitar Lick Speed Trainer</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎸</text></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Music&display=swap">
   <style>
+    @font-face {
+      font-family: 'Noto Music';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url(fonts/NotoMusic.ttf) format('truetype');
+    }
     .music-symbol {
       font-family: 'Noto Music', 'Noto Sans Symbols2', 'Segoe UI Symbol', 'Apple Symbols', serif;
     }
@@ -17,31 +22,38 @@
     *::-webkit-scrollbar { display: none; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #1a1a2e;
+      background: linear-gradient(to bottom, #1a1a2e, #2a2a4e);
       color: #eee;
-      min-height: 100vh;
-      overflow-x: hidden;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       padding-top: env(safe-area-inset-top);
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
-      padding-bottom: env(safe-area-inset-bottom);
     }
     .app {
       max-width: 1100px;
       width: 100%;
       padding: 1rem 1.5rem;
       margin: 0 auto;
+      box-sizing: border-box;
+      overflow-x: hidden;
+      overflow-y: auto;
+      flex: 1;
+      -webkit-overflow-scrolling: touch;
     }
     .settings-row {
       display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0.5rem;
       margin-bottom: 1rem;
+      width: 100%;
+      box-sizing: border-box;
     }
     .settings-row .tempo-section {
       margin-bottom: 0;
-      flex: 1;
-      min-width: 150px;
+      width: 100%;
     }
     .bar-row {
       display: flex;
@@ -63,6 +75,8 @@
       display: flex;
       align-items: center;
       gap: 0.8rem;
+      width: 100%;
+      box-sizing: border-box;
     }
     .tempo-section label {
       font-weight: 600;
@@ -74,21 +88,30 @@
       align-items: center;
       gap: 0.8rem;
       flex: 1;
+      min-width: 0;
     }
     .tempo-row input[type="range"] {
       flex: 1;
+      min-width: 0;
       accent-color: #e94560;
     }
-    .tempo-row input[type="number"] {
-      width: 70px;
-      padding: 0.3rem;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background: #16213e;
+    .tempo-display {
+      min-width: 40px;
+      padding: 0.3rem 0.5rem;
       color: #eee;
       text-align: center;
       font-size: 1rem;
     }
+    .tempo-arrow {
+      background: #16213e;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #eee;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .tempo-arrow:active { background: #e94560; }
     .pattern-section {
       margin-bottom: 1rem;
     }
@@ -104,10 +127,17 @@
       display: none;
     }
     .app.edit-mode .note-palette { display: block; }
+    .app.edit-mode .presets-section,
+    .app.edit-mode .visualizer,
+    .app.edit-mode #speedUpSection { display: none; }
+    .ctrl-item.ctrl-normal { display: flex; }
+    .app.edit-mode .ctrl-item.ctrl-normal { display: none; }
+    .ctrl-item.ctrl-edit { display: none; }
+    .app.edit-mode .ctrl-item.ctrl-edit { display: flex; }
     .beat-cell .remove-btn { display: none !important; }
     .app.edit-mode .beat-cell .remove-btn { display: flex !important; }
     .beat-cell .pitch-input,
-    .beat-cell .bend-row,
+    .beat-cell .bend-display,
     .beat-cell .note-name { display: none !important; }
     .beat-cell .bend-indicator {
       font-size: 0.7rem;
@@ -119,8 +149,8 @@
     }
     .app.edit-mode .beat-cell .bend-indicator { display: none; }
     .app.edit-mode .beat-cell { grid-template-rows: 22px 2.4rem 6px auto auto; }
-    .app.edit-mode .beat-cell .pitch-input { display: block !important; }
-    .app.edit-mode .beat-cell .bend-row { display: flex !important; }
+    .app.edit-mode .beat-cell .pitch-input { display: block !important; grid-row: 4; justify-self: start; }
+    .app.edit-mode .beat-cell .bend-display { display: block !important; grid-row: 5; justify-self: start; margin-top: 4px; }
     .edit-bar {
       display: none;
       align-items: center;
@@ -129,7 +159,7 @@
       padding: 0.6rem 1rem;
       background: #16213e;
       border-radius: 8px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
     }
     .app.edit-mode .edit-bar { display: flex; }
     .edit-bar label { font-size: 0.85rem; color: #ccc; }
@@ -142,39 +172,17 @@
       font-size: 0.85rem;
       min-width: 0;
     }
-    .edit-bar input[type="text"] { width: 100px; max-width: 30vw; }
+    .edit-bar #editName { flex: 1; min-width: 80px; }
+    .edit-bar #editKey { width: 50px; flex: none; }
+    .edit-bar #editBox { width: 30px; flex: none; }
     .edit-bar input[type="number"] { width: 45px; max-width: 15vw; }
     .edit-bar select { max-width: 25vw; }
-    .edit-bar .save-btn {
-      padding: 0.4rem 1rem;
-      border: none;
-      border-radius: 4px;
-      background: #27ae60;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .edit-bar .save-btn:hover { background: #2ecc71; }
-    .edit-bar .cancel-btn {
-      padding: 0.4rem 1rem;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background: #333;
-      color: #eee;
-      cursor: pointer;
-    }
-    .edit-bar .cancel-btn:hover { background: #444; }
-    .edit-bar .delete-btn {
-      padding: 0.4rem 1rem;
-      border: 1px solid #e94560;
-      border-radius: 4px;
-      background: transparent;
-      color: #e94560;
-      cursor: pointer;
-      margin-left: auto;
-    }
-    .edit-bar .delete-btn:hover { background: #e94560; color: white; }
-    .edit-bar .delete-btn.hidden { display: none; }
+    .controls .save-btn { border-color: #27ae60; color: #27ae60; }
+    .controls .save-btn:hover { background: #27ae60; color: white; }
+    .controls .cancel-btn:hover { background: #444; }
+    .controls .delete-btn { border-color: #e94560; color: #e94560; }
+    .controls .delete-btn:hover { background: #e94560; color: white; }
+    .ctrl-item.ctrl-delete.hidden { display: none !important; }
     .palette-toggle {
       display: flex;
       align-items: center;
@@ -318,7 +326,7 @@
     }
     .app.edit-mode .bar-labels {
       display: grid;
-      grid-template-rows: 22px 2.4rem 6px auto auto;
+      grid-template-rows: 22px 2.4rem 6px 26px 26px;
       align-items: center;
       position: absolute;
       right: 100%;
@@ -333,6 +341,7 @@
       writing-mode: vertical-rl;
       transform: rotate(180deg);
       justify-self: center;
+      align-self: center;
     }
     .beat-cell:hover { background: rgba(233,69,96,0.15); }
     .beat-cell.active { background: rgba(233,69,96,0.35); }
@@ -377,45 +386,89 @@
       outline: 1px solid #e94560;
       border-color: #e94560;
     }
-    .beat-cell .bend-row {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
+    .beat-cell .bend-display {
       width: 100%;
-    }
-    .beat-cell .bend-dir {
-      width: 100%;
-      max-width: 28px;
-      height: 16px;
-      border: 1px solid #444;
-      border-radius: 3px;
-      background: #0f3460;
-      color: #ff8a5c;
-      font-size: 0.7rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      line-height: 1;
-    }
-    .beat-cell .bend-dir:hover { background: #1a5276; }
-    .beat-cell .bend-input {
-      width: 100%;
-      max-width: 28px;
-      height: 18px;
-      font-size: 0.7rem;
+      max-width: 38px;
+      height: 22px;
+      font-size: 0.85rem;
       text-align: center;
       border: 1px solid #444;
       border-radius: 3px;
       background: #0f3460;
       color: #ff8a5c;
       padding: 0 1px;
+      cursor: pointer;
     }
-    .beat-cell .bend-input:focus {
-      outline: 1px solid #ff8a5c;
-      border-color: #ff8a5c;
+    .fret-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+    .fret-grid button {
+      padding: 10px 0;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: #0f3460;
+      color: #eee;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    .fret-grid button.selected {
+      background: #e94560;
+      border-color: #e94560;
+      color: #fff;
+    }
+    .pitch-overlay-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .pitch-overlay-backdrop.active { display: flex; }
+    .pitch-overlay {
+      background: #16213e;
+      border: 1px solid #444;
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+    }
+    .pitch-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .pitch-col button {
+      padding: 8px 14px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: #0f3460;
+      color: #eee;
+      font-size: 1rem;
+      cursor: pointer;
+      min-width: 40px;
+      text-align: center;
+    }
+    .pitch-col button.selected {
+      background: #e94560;
+      border-color: #e94560;
+      color: #fff;
+    }
+    .pitch-ok {
+      align-self: flex-end;
+      padding: 8px 18px;
+      background: #e94560;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: auto;
     }
     .beat-cell .remove-btn {
       position: absolute;
@@ -442,43 +495,71 @@
       justify-content: center;
       margin-bottom: 0.8rem;
     }
+    .ctrl-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .ctrl-label {
+      font-size: 0.6rem;
+      color: #888;
+      text-align: center;
+      white-space: nowrap;
+    }
     .controls button {
-      padding: 0.6rem 1.8rem;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.1s, background 0.15s;
-    }
-    .controls button:active { transform: scale(0.95); }
-    .play-btn {
-      background: #e94560;
-      color: white;
-    }
-    .play-btn.playing { background: #ff8a5c; }
-    .reset-btn {
-      display: none;
-      background: #333;
-      color: #eee;
-    }
-    .app.edit-mode .reset-btn { display: inline-block; }
-    .reset-btn:hover { background: #444; }
-    .count-in-btn {
       width: 42px;
       height: 42px;
       border-radius: 50%;
       border: 2px solid #444;
       background: #333;
+      color: #eee;
       font-size: 1.2rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s, border-color 0.15s;
+      padding: 0;
+      line-height: 0;
+      transition: transform 0.1s, background 0.15s, border-color 0.15s;
     }
-    .count-in-btn:hover { border-color: #e94560; }
-    .count-in-btn.active { background: #e94560; border-color: #e94560; }
+    .controls button svg {
+      flex-shrink: 0;
+      display: block;
+      stroke: currentColor;
+    }
+    .controls button:hover { border-color: #e94560; }
+    .controls button:active { transform: scale(0.95); }
+    .play-footer {
+      flex-shrink: 0;
+      padding: 12px 1.5rem;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+    }
+    .play-footer .play-btn {
+      width: 100%;
+      max-width: 400px;
+      height: 56px;
+      border-radius: 14px;
+      border: none;
+      background: #e94560;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+      touch-action: manipulation;
+    }
+    .play-footer .play-btn:active { transform: scale(0.97); }
+    .play-footer .play-btn.playing { background: #ff8a5c; }
+    .play-footer .play-btn svg { width: 24px; height: 24px; }
+    .count-in-btn.active { background: #e94560; border-color: #e94560; color: white; }
     .visualizer {
       height: 40px;
       background: #16213e;
@@ -519,38 +600,15 @@
     .presets-section {
       margin-bottom: 1rem;
     }
-    .presets-section label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.4rem;
-    }
-    .presets-row {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .presets-row button {
-      padding: 0.4rem 0.8rem;
-      border: 1px solid #444;
-      border-radius: 4px;
-      background: #16213e;
-      color: #eee;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: background 0.15s;
-    }
-    .presets-row button:hover { background: #0f3460; }
-    .presets-row button.active {
-      background: #e94560;
-      border-color: #e94560;
-    }
 
     .tab-grid-wrapper {
       position: relative;
       width: 100%;
       margin-top: 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      padding-top: 0.8rem;
+      border-top: none;
+      padding: 0.8rem;
+      background: #2a3a5e;
+      border-radius: 6px;
     }
     .tab-labels {
       position: absolute;
@@ -562,11 +620,13 @@
     }
     .tab-labels span {
       font-size: 1rem;
-      font-family: 'Courier New', monospace;
+      font-family: 'SF Pro Display', 'Inter', 'Roboto', -apple-system, sans-serif;
+      font-weight: 700;
       color: #777;
       line-height: 1.3;
       height: 1.8rem;
       text-align: right;
+      -webkit-font-smoothing: antialiased;
     }
     .tab-grid {
       display: flex;
@@ -582,8 +642,9 @@
       min-width: 0;
     }
     .tab-cell span {
-      font-family: 'Courier New', monospace;
+      font-family: 'SF Pro Display', 'Inter', 'Roboto', -apple-system, sans-serif;
       font-size: 1.5rem;
+      font-weight: 700;
       color: #aaa;
       line-height: 1.3;
       height: 1.8rem;
@@ -593,10 +654,12 @@
       width: 100%;
       padding-left: 4px;
       border-bottom: 1px solid rgba(255,255,255,0.06);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     .tab-cell span.tab-fret {
       color: #e94560;
-      font-weight: 600;
+      font-weight: 800;
     }
     .tab-edit-input {
       width: 100%;
@@ -615,17 +678,6 @@
 
     button, select, input { touch-action: manipulation; }
 
-    .presets-select {
-      display: none;
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #444;
-      border-radius: 6px;
-      background: #16213e;
-      color: #eee;
-      font-size: 1rem;
-      appearance: auto;
-    }
 
     @media (max-width: 700px) {
       .bar-row {
@@ -634,14 +686,9 @@
       .app { padding: 0.8rem; }
       h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
       .controls { margin-bottom: 0.8rem; }
-      .presets-row { display: none; }
-      .presets-select { display: block; }
       .settings-row {
         flex-direction: column;
         gap: 0.6rem;
-      }
-      .settings-row .tempo-section {
-        min-width: 100%;
       }
       .tab-cell span { font-size: 1.2rem; height: 1.5rem; }
       .tab-labels span { font-size: 0.85rem; height: 1.5rem; }
@@ -658,15 +705,14 @@
       h1 { font-size: 1.1rem; margin-bottom: 0.4rem; }
       .controls { gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
       .controls button { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
-      .count-in-btn { width: 38px; height: 38px; font-size: 1rem; }
+      .controls button { width: 38px; height: 38px; }
       .visualizer { height: 30px; }
       .bar-container { padding: 0.6rem; }
       .beat-cell { padding: 2px; }
       .beat-cell .note-label { font-size: 1.8rem; height: 1.8rem; width: 1.6rem; }
       .app.edit-mode .beat-cell .note-name { font-size: 0.5rem; }
       .beat-cell .pitch-input { max-width: 32px; font-size: 0.75rem; }
-      .beat-cell .bend-input { font-size: 0.65rem; max-width: 24px; }
-      .beat-cell .bend-dir { max-width: 24px; height: 14px; font-size: 0.6rem; }
+      .beat-cell .bend-display { font-size: 0.75rem; max-width: 32px; }
       .tab-cell span { font-size: 1rem; height: 1.3rem; }
       .tab-labels { font-size: 0.7rem; }
       .tab-labels span { font-size: 0.7rem; height: 1.3rem; }
@@ -677,10 +723,6 @@
         padding: 0.25rem 0.3rem;
         font-size: 0.8rem;
       }
-      .edit-bar .save-btn, .edit-bar .cancel-btn, .edit-bar .delete-btn {
-        padding: 0.3rem 0.7rem;
-        font-size: 0.8rem;
-      }
       .settings-row { gap: 0.5rem; }
       .tempo-section label { font-size: 0.8rem; margin-bottom: 0.2rem; }
     }
@@ -688,46 +730,31 @@
 </head>
 <body>
   <div class="app">
-    <h1>Metronome Speed Trainer</h1>
+    <h1>Guitar Lick Speed Trainer</h1>
 
     <div class="controls">
-      <button id="playBtn" class="play-btn">Play</button>
-      <button id="countInBtn" class="count-in-btn" title="Toggle count-in">🕐</button>
-      <button id="easeInBtn" class="count-in-btn" title="Start 2 BPM below">🐢</button>
-      <button id="editBtn" class="count-in-btn" title="Edit">✏️</button>
-      <button id="createNewBtn" class="count-in-btn" title="Create new preset">➕</button>
-      <button id="resetBtn" class="reset-btn">Reset</button>
+      <div class="ctrl-item ctrl-normal"><button id="countInBtn" class="count-in-btn" title="Toggle count-in"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button><span class="ctrl-label">Count in</span></div>
+      <div class="ctrl-item ctrl-normal"><button id="easeInBtn" class="count-in-btn" title="Start 2 BPM below"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><polyline points="5 12 12 19 19 12"/></svg></button><span class="ctrl-label">Slow start</span></div>
+      <div class="ctrl-item"><button id="editBtn" class="count-in-btn" title="Edit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><span class="ctrl-label">Edit</span></div>
+      <div class="ctrl-item ctrl-normal"><button id="createNewBtn" class="count-in-btn" title="Create new preset"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><span class="ctrl-label">New</span></div>
+      <div class="ctrl-item ctrl-edit"><button id="resetBtn" class="reset-btn" title="Reset"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button><span class="ctrl-label">Revert</span></div>
+      <div class="ctrl-item ctrl-edit"><button class="save-btn" id="editSaveBtn" title="Save"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button><span class="ctrl-label">Save</span></div>
+      <div class="ctrl-item ctrl-edit"><button class="cancel-btn" id="editCancelBtn" title="Cancel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><span class="ctrl-label">Cancel</span></div>
+      <div class="ctrl-item ctrl-edit ctrl-delete"><button class="delete-btn" id="editDeleteBtn" title="Delete"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button><span class="ctrl-label">Delete</span></div>
     </div>
 
     <div class="edit-bar" id="editBar">
       <label>Name</label>
-      <input type="text" id="editName" placeholder="Preset name">
+      <input type="text" id="editName" placeholder="Preset name" readonly style="cursor:pointer;">
       <label>Key</label>
-      <select id="editKey">
-        <option value="Am">Am</option>
-        <option value="A#m">A#m/Bbm</option>
-        <option value="Bm">Bm</option>
-        <option value="Cm">Cm</option>
-        <option value="C#m">C#m</option>
-        <option value="Dm">Dm</option>
-        <option value="D#m">D#m/Ebm</option>
-        <option value="Em">Em</option>
-        <option value="Fm">Fm</option>
-        <option value="F#m">F#m</option>
-        <option value="Gm">Gm</option>
-        <option value="G#m">G#m/Abm</option>
-      </select>
+      <input type="text" id="editKey" value="Am" readonly style="width:50px;text-align:center;cursor:pointer;">
       <label>Box</label>
-      <input type="number" id="editBox" min="1" max="5" value="1">
-      <button class="save-btn" id="editSaveBtn">Save</button>
-      <button class="cancel-btn" id="editCancelBtn">Cancel</button>
-      <button class="delete-btn" id="editDeleteBtn">Delete</button>
+      <input type="text" id="editBox" value="1" readonly style="width:30px;text-align:center;cursor:pointer;">
     </div>
 
-    <div class="presets-section">
-      <label>Presets</label>
-      <div class="presets-row" id="presetsRow"></div>
-      <select class="presets-select" id="presetsSelect"><option value="">-- Select preset --</option></select>
+    <div class="presets-section" style="position:relative;">
+      <input type="text" id="presetPickerBtn" readonly style="width:100%;padding:0.5rem 2rem 0.5rem 0.5rem;border:1px solid #444;border-radius:6px;background:#16213e;color:#eee;font-size:1rem;cursor:pointer;box-sizing:border-box;">
+      <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#888;font-size:0.7rem;pointer-events:none;">&#9660;</span>
     </div>
 
     <div class="visualizer" id="visualizer">
@@ -740,7 +767,9 @@
         <label>Tempo</label>
         <div class="tempo-row">
           <input type="range" id="tempoSlider" min="20" max="300" value="120">
-          <input type="number" id="tempoInput" min="20" max="300" value="120">
+          <button id="tempoDown" class="tempo-arrow">◀</button>
+          <span id="tempoInput" class="tempo-display">120</span>
+          <button id="tempoUp" class="tempo-arrow">▶</button>
           <span>BPM</span>
         </div>
       </div>
@@ -751,13 +780,13 @@
           <span id="volDisplay">80%</span>
         </div>
       </div>
-      <div class="tempo-section">
+      <div class="tempo-section" id="speedUpSection">
         <label>Speed Up</label>
         <div class="tempo-row">
           <span>+</span>
-          <input type="number" id="speedUpBpm" min="0" max="20" value="0" style="width:45px;padding:0.2rem;border:1px solid #444;border-radius:4px;background:#16213e;color:#eee;text-align:center;font-size:0.85rem;">
+          <input type="text" id="speedUpBpm" value="0" readonly style="width:45px;padding:0.2rem;border:1px solid #444;border-radius:4px;background:#16213e;color:#eee;text-align:center;font-size:0.85rem;cursor:pointer;">
           <span>BPM /</span>
-          <input type="number" id="speedUpBars" min="1" max="64" value="4" style="width:45px;padding:0.2rem;border:1px solid #444;border-radius:4px;background:#16213e;color:#eee;text-align:center;font-size:0.85rem;">
+          <input type="text" id="speedUpBars" value="4" readonly style="width:45px;padding:0.2rem;border:1px solid #444;border-radius:4px;background:#16213e;color:#eee;text-align:center;font-size:0.85rem;cursor:pointer;">
           <span>bars</span>
         </div>
       </div>
@@ -882,6 +911,11 @@
           </div>
         </div>
     </div>
+  </div>
+
+  <div class="play-footer">
+    <button id="playBtn" class="play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
+  </div>
 
   <script>
     const NOTE_TYPES = {
@@ -935,11 +969,22 @@
       return 440 * Math.pow(2, (midi - 69) / 12);
     }
 
+    let wakeLock = null;
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+      }
+    }
+    function releaseWakeLock() {
+      if (wakeLock) { wakeLock.release(); wakeLock = null; }
+    }
+
     let bars = [[], []];
     let tempo = 120;
     let volume = 0.8;
     let speedUpBpm = 0;
     let speedUpBars = 4;
+    let currentPresetName = '';
     let loopCount = 0;
     let playing = false;
     let editMode = false;
@@ -947,6 +992,7 @@
     let preEditBars = null;
     let userPresets = JSON.parse(localStorage.getItem('metronome_user_presets') || '[]');
     let audioCtx = null;
+    let playGeneration = 0;
     let nextNoteTime = 0;
     let currentNote = 0;
     let timerID = null;
@@ -962,12 +1008,18 @@
 
     tempoSlider.addEventListener('input', () => {
       tempo = parseInt(tempoSlider.value);
-      tempoInput.value = tempo;
+      tempoInput.textContent = tempo;
       saveState();
     });
-    tempoInput.addEventListener('change', () => {
-      tempo = Math.max(20, Math.min(300, parseInt(tempoInput.value) || 120));
-      tempoInput.value = tempo;
+    document.getElementById('tempoDown').addEventListener('click', () => {
+      tempo = Math.max(20, tempo - 1);
+      tempoInput.textContent = tempo;
+      tempoSlider.value = tempo;
+      saveState();
+    });
+    document.getElementById('tempoUp').addEventListener('click', () => {
+      tempo = Math.min(300, tempo + 1);
+      tempoInput.textContent = tempo;
       tempoSlider.value = tempo;
       saveState();
     });
@@ -982,14 +1034,19 @@
 
     const speedUpBpmInput = document.getElementById('speedUpBpm');
     const speedUpBarsInput = document.getElementById('speedUpBars');
-    speedUpBpmInput.addEventListener('change', () => {
-      speedUpBpm = parseInt(speedUpBpmInput.value) || 0;
-      saveState();
+    speedUpBpmInput.addEventListener('click', () => {
+      openNumberPicker('BPM increase', 0, 20, speedUpBpm, (val) => {
+        speedUpBpm = val;
+        speedUpBpmInput.value = val;
+        saveState();
+      });
     });
-    speedUpBarsInput.addEventListener('change', () => {
-      speedUpBars = Math.max(1, parseInt(speedUpBarsInput.value) || 4);
-      speedUpBarsInput.value = speedUpBars;
-      saveState();
+    speedUpBarsInput.addEventListener('click', () => {
+      openNumberPicker('Bars between increases', 1, 32, speedUpBars, (val) => {
+        speedUpBars = val;
+        speedUpBarsInput.value = val;
+        saveState();
+      });
     });
 
     document.querySelectorAll('.add-buttons button').forEach(btn => {
@@ -1005,11 +1062,9 @@
 
     resetBtn.addEventListener('click', () => {
       stop();
-      if (!editMode) return;
-      bars = [[], []];
-      activePresetIndex = null;
+      if (!editMode || !preEditBars) return;
+      bars = JSON.parse(JSON.stringify(preEditBars));
       renderBars();
-      saveState();
     });
 
     playBtn.addEventListener('click', () => {
@@ -1074,30 +1129,23 @@
               <div class="note-bar" style="background:${barColor}"><button class="remove-btn">&times;</button></div>
               <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>${bendIndicator}
               <span class="note-name">${NOTE_TYPES[type].name}</span>
-              <input class="pitch-input" type="text" value="${note}" placeholder="C4" maxlength="3">
-              <div class="bend-row">
-                <button class="bend-dir" title="Toggle bend direction">${bendUp ? '▲' : '▼'}</button>
-                <input class="bend-input" type="number" value="${bendAbs}" placeholder="0" min="0" max="24">
-              </div>
+              <input class="pitch-input" type="text" value="${note}" placeholder="C4" maxlength="3" readonly>
+              <input class="bend-display" type="text" value="${bendAbs > 0 ? (bendUp ? '↑' : '↓') + bendAbs : ''}" placeholder="—" readonly>
             `;
+            cell.querySelector('.pitch-input').addEventListener('click', (e) => {
+              e.stopPropagation();
+              openPitchPicker(e.target);
+            });
             cell.querySelector('.pitch-input').addEventListener('change', (e) => {
               bars[b][i].note = e.target.value;
               renderTab();
               saveState();
             });
-            cell.querySelector('.bend-dir').addEventListener('click', (e) => {
+            cell.querySelector('.bend-display').addEventListener('click', (e) => {
               e.stopPropagation();
-              const current = bars[b][i].bend || 0;
-              bars[b][i].bend = -current || (current === 0 ? 0 : -current);
-              const btn = e.target;
-              const isNowUp = bars[b][i].bend >= 0;
-              btn.textContent = isNowUp ? '▲' : '▼';
-              saveState();
+              openBendPicker(e.target, bars[b][i]);
             });
-            cell.querySelector('.bend-input').addEventListener('change', (e) => {
-              const val = Math.abs(parseInt(e.target.value) || 0);
-              const dir = (bars[b][i].bend || 0) >= 0 ? 1 : -1;
-              bars[b][i].bend = val * dir;
+            cell.querySelector('.bend-display').addEventListener('change', () => {
               renderTab();
               saveState();
             });
@@ -1174,7 +1222,8 @@
     let currentBox = 1;
 
     function getBoxParams() {
-      const rootNote = currentKey.replace('m', '');
+      const keyMatch = currentKey.match(/^([A-G][#b]?)/);
+      const rootNote = keyMatch ? keyMatch[1] : 'A';
       const rootFret = ROOT_FRETS[rootNote] !== undefined ? ROOT_FRETS[rootNote] : 5;
       const offsets = BOX_OFFSETS[(currentBox - 1) % 5];
       const low = rootFret + offsets.low;
@@ -1187,7 +1236,7 @@
       const box = getBoxParams();
       midi -= box.octaveDrop;
       let best = null;
-      for (let s = 0; s < 4; s++) {
+      for (let s = 0; s < 6; s++) {
         const fret = midi - GUITAR_STRINGS[s].midi;
         if (fret < 0 || fret > 15) continue;
         const inBox = fret >= box.low && fret <= box.high;
@@ -1213,14 +1262,6 @@
       return NOTE_NAMES[noteIdx] + octave;
     }
 
-    function parseTabInput(value) {
-      const match = value.trim().match(/^(\d+)(?:b(\d+))?$/);
-      if (!match) return null;
-      const fret = parseInt(match[1]);
-      const bendTarget = match[2] ? parseInt(match[2]) : null;
-      const bend = bendTarget !== null ? (bendTarget - fret) : 0;
-      return { fret, bend };
-    }
 
     function renderTab() {
       const STRING_NAMES = GUITAR_STRINGS.map(s => s.name);
@@ -1284,9 +1325,12 @@
               sp.textContent = 'x';
             } else if (pos && s === pos.string) {
               sp.classList.add('tab-fret');
-              if (bend !== 0) {
-                const targetFret = pos.fret + Math.abs(bend);
+              if (bend > 0) {
+                const targetFret = pos.fret + bend;
                 sp.textContent = pos.fret + 'b' + targetFret;
+              } else if (bend < 0) {
+                const startFret = pos.fret + Math.abs(bend);
+                sp.textContent = startFret + 'r' + pos.fret;
               } else {
                 sp.textContent = pos.fret;
               }
@@ -1298,18 +1342,15 @@
               const barIdx = b;
               const stringIdx = s;
               sp.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'tab-edit-input';
-                input.value = sp.classList.contains('tab-fret') ? sp.textContent : '';
-                input.placeholder = '7';
-                sp.textContent = '';
-                sp.appendChild(input);
-                input.focus();
-                input.select();
-                const commit = () => {
-                  const parsed = parseTabInput(input.value);
-                  if (parsed) {
+                let currentFret = '';
+                if (sp.classList.contains('tab-fret')) {
+                  const txt = sp.textContent;
+                  const bIdx = txt.indexOf('b');
+                  currentFret = bIdx > 0 ? txt.substring(0, bIdx) : txt;
+                }
+                const currentBend = bars[barIdx][noteIdx].bend || 0;
+                openFretPicker(currentFret, (fret, bend) => {
+                  if (fret !== null) {
                     const currentType = bars[barIdx][noteIdx].type;
                     const isRest = NOTE_TYPES[currentType].rest;
                     if (isRest) {
@@ -1319,11 +1360,11 @@
                       );
                       if (noteType) bars[barIdx][noteIdx].type = noteType;
                     }
-                    const noteName = stringFretToNote(stringIdx, parsed.fret);
+                    const noteName = stringFretToNote(stringIdx, fret);
                     bars[barIdx][noteIdx].note = noteName;
-                    bars[barIdx][noteIdx].bend = parsed.bend;
+                    bars[barIdx][noteIdx].bend = bend;
                     bars[barIdx][noteIdx].string = stringIdx;
-                  } else if (input.value.trim() === '') {
+                  } else {
                     const currentType = bars[barIdx][noteIdx].type;
                     const beats = NOTE_TYPES[currentType].beats;
                     const restType = Object.keys(NOTE_TYPES).find(k =>
@@ -1335,12 +1376,7 @@
                   }
                   renderBars();
                   saveState();
-                };
-                input.addEventListener('blur', commit);
-                input.addEventListener('keydown', (e) => {
-                  if (e.key === 'Enter') { input.blur(); }
-                  if (e.key === 'Escape') { input.value = ''; input.blur(); }
-                });
+                }, currentBend);
               });
             }
             cell.appendChild(sp);
@@ -1378,6 +1414,7 @@
 
     let countingIn = false;
     let countInEnabled = false;
+    let preEaseInTempo = null;
 
     const countInBtn = document.getElementById('countInBtn');
     countInBtn.addEventListener('click', () => {
@@ -1408,15 +1445,15 @@
       editBtn.classList.add('active');
       if (creating) {
         bars = [[], []];
+        preEditBars = [[], []];
         activePresetIndex = null;
         editNameInput.value = '';
       } else {
-        const preset = getActivePreset();
-        editNameInput.value = preset ? preset.name : '';
+        editNameInput.value = currentPresetName || '';
       }
       editKeySelect.value = currentKey;
       editBoxInput.value = currentBox;
-      editDeleteBtn.classList.toggle('hidden', creating || activePresetIndex === null);
+      editDeleteBtn.closest('.ctrl-item').classList.toggle('hidden', creating || activePresetIndex === null);
       renderBars();
     }
 
@@ -1435,15 +1472,13 @@
       return userPresets[activePresetIndex - PRESETS.length] || null;
     }
 
-    editKeySelect.addEventListener('change', () => {
+    editKeySelect.addEventListener('click', () => {
       if (!editMode) return;
-      currentKey = editKeySelect.value;
-      renderTab();
+      openKeyPicker();
     });
-    editBoxInput.addEventListener('change', () => {
+    editBoxInput.addEventListener('click', () => {
       if (!editMode) return;
-      currentBox = Math.max(1, Math.min(5, parseInt(editBoxInput.value) || 1));
-      editBoxInput.value = currentBox;
+      openBoxPicker(editBoxInput);
       renderTab();
     });
 
@@ -1460,32 +1495,39 @@
     editCancelBtn.addEventListener('click', () => {
       if (preEditBars) {
         bars = preEditBars;
-        renderBars();
       }
       exitEditMode();
+      saveState();
     });
 
     const editDeleteBtn = document.getElementById('editDeleteBtn');
     editDeleteBtn.addEventListener('click', () => {
       if (activePresetIndex === null) return;
       const preset = getActivePreset();
-      if (!confirm(`Delete "${preset.name}"?`)) return;
-      if (activePresetIndex < PRESETS.length) {
-        PRESETS.splice(activePresetIndex, 1);
-      } else {
-        userPresets.splice(activePresetIndex - PRESETS.length, 1);
-        localStorage.setItem('metronome_user_presets', JSON.stringify(userPresets));
-      }
-      activePresetIndex = null;
-      bars = [[], []];
-      exitEditMode();
-      renderPresets();
-      renderBars();
-      saveState();
+      openConfirmOverlay(`Delete "${preset.name}"?`, () => {
+        if (activePresetIndex < PRESETS.length) {
+          PRESETS.splice(activePresetIndex, 1);
+        } else {
+          userPresets.splice(activePresetIndex - PRESETS.length, 1);
+          localStorage.setItem('metronome_user_presets', JSON.stringify(userPresets));
+        }
+        activePresetIndex = null;
+        bars = [[], []];
+        exitEditMode();
+        renderPresets();
+        renderBars();
+        saveState();
+      });
     });
 
     editSaveBtn.addEventListener('click', () => {
-      const name = editNameInput.value.trim() || 'Untitled';
+      const name = editNameInput.value.trim();
+      if (!name) {
+        editNameInput.style.outline = '2px solid #e94560';
+        editNameInput.focus();
+        setTimeout(() => { editNameInput.style.outline = ''; }, 1500);
+        return;
+      }
       const key = editKeySelect.value;
       const box = parseInt(editBoxInput.value) || 1;
       currentKey = key;
@@ -1511,25 +1553,32 @@
       }
 
       localStorage.setItem('metronome_user_presets', JSON.stringify(userPresets));
-      saveState();
       exitEditMode();
+      saveState();
       renderPresets();
     });
 
     function start() {
       pattern = buildPattern();
       if (pattern.length === 0) return;
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        handleAudioInterruption();
+      }
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      requestWakeLock();
       playing = true;
+      playGeneration++;
+      const gen = playGeneration;
       playBtn.classList.add('playing');
       currentNote = 0;
       loopCount = 0;
 
       if (easeInEnabled) {
+        preEaseInTempo = tempo;
         tempo = Math.max(20, tempo - 2);
         tempoSlider.value = tempo;
-        tempoInput.value = tempo;
+        tempoInput.textContent = tempo;
       }
 
       if (countInEnabled) {
@@ -1543,13 +1592,13 @@
         nextNoteTime = startTime + 4 * beatDur;
         const countInDuration = (4 * beatDur - 0.1) * 1000;
         setTimeout(() => {
-          if (!playing) return;
+          if (!playing || gen !== playGeneration) return;
           countingIn = false;
-          playBtn.textContent = 'Stop';
+          playBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
           scheduler();
         }, countInDuration);
       } else {
-        playBtn.textContent = 'Stop';
+        playBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
         nextNoteTime = audioCtx.currentTime + 0.05;
         scheduler();
       }
@@ -1574,21 +1623,28 @@
         if (!playing) return;
         playBtn.textContent = (beat + 1) + '...';
         flash.classList.add('on');
-        setTimeout(() => flash.classList.remove('on'), 15);
+        setTimeout(() => flash.classList.remove('on'), 60);
       }, Math.max(0, delay));
     }
 
     function stop() {
       playing = false;
       countingIn = false;
-      playBtn.textContent = 'Play';
+      releaseWakeLock();
+      if (preEaseInTempo !== null) {
+        tempo = preEaseInTempo;
+        tempoSlider.value = tempo;
+        tempoInput.textContent = tempo;
+        preEaseInTempo = null;
+      }
+      playBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
       playBtn.classList.remove('playing');
       if (timerID) { clearTimeout(timerID); timerID = null; }
       playhead.style.left = '0%';
     }
 
     function scheduler() {
-      while (nextNoteTime < audioCtx.currentTime + 0.1) {
+      while (nextNoteTime < audioCtx.currentTime + 0.25) {
         scheduleNote(currentNote, nextNoteTime);
         const note = pattern[currentNote];
         const beatDuration = 60.0 / tempo;
@@ -1600,7 +1656,7 @@
           if (speedUpBpm > 0 && loopCount % speedUpBars === 0) {
             tempo = Math.min(300, tempo + speedUpBpm);
             tempoSlider.value = tempo;
-            tempoInput.value = tempo;
+            tempoInput.textContent = tempo;
           }
         }
       }
@@ -1632,7 +1688,7 @@
             flash.style.background = 'radial-gradient(ellipse at center, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 30%, rgba(255,255,255,0) 70%)';
           }
           flash.classList.add('on');
-          setTimeout(() => flash.classList.remove('on'), 15);
+          setTimeout(() => flash.classList.remove('on'), 60);
         }
         highlightCell(noteIndex);
       }, Math.max(0, delay));
@@ -1710,9 +1766,24 @@
       osc2.start(time);
       osc.stop(time + dur + 0.01);
       osc2.stop(time + dur + 0.01);
+      osc.onended = () => {
+        osc.disconnect();
+        osc2.disconnect();
+        preGain.disconnect();
+        preGain2.disconnect();
+        mixer.disconnect();
+        distortion.disconnect();
+        midBoost.disconnect();
+        presence.disconnect();
+        cabinet.disconnect();
+        highpass.disconnect();
+        gain.disconnect();
+      };
     }
 
+    const distortionCurveCache = {};
     function makeDistortionCurve(amount) {
+      if (distortionCurveCache[amount]) return distortionCurveCache[amount];
       const samples = 44100;
       const curve = new Float32Array(samples);
       const deg = Math.PI / 180;
@@ -1720,6 +1791,7 @@
         const x = (i * 2) / samples - 1;
         curve[i] = ((3 + amount) * x * 20 * deg) / (Math.PI + amount * Math.abs(x));
       }
+      distortionCurveCache[amount] = curve;
       return curve;
     }
 
@@ -1730,7 +1802,8 @@
     }
 
     function saveState() {
-      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars, activePresetIndex, editMode }));
+      if (editMode) return;
+      localStorage.setItem('metronome', JSON.stringify({ bars, tempo, volume, speedUpBpm, speedUpBars, activePresetIndex, currentPresetName }));
       if (activePresetIndex !== null) savePresetOverride(activePresetIndex);
     }
 
@@ -1744,16 +1817,19 @@
         speedUpBpm = s.speedUpBpm || 0;
         speedUpBars = s.speedUpBars || 4;
         activePresetIndex = s.activePresetIndex !== undefined ? s.activePresetIndex : null;
-        editMode = s.editMode || false;
+        currentPresetName = s.currentPresetName || '';
       } else {
-        bars = [[{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0},{type:"quaver",note:"D5",bend:2},{type:"semiquaver",note:"E5",bend:0},{type:"semiquaver",note:"A5",bend:0},{type:"semiquaver",note:"G5",bend:0},{type:"semiquaver",note:"E5",bend:0}],[]];
-        tempo = 120;
-        volume = 1;
-        speedUpBpm = 1;
-        speedUpBars = 1;
+        const d = PRESETS[0].data;
+        bars = JSON.parse(JSON.stringify(d.bars));
+        tempo = d.tempo;
+        volume = d.volume;
+        speedUpBpm = d.speedUpBpm;
+        speedUpBars = d.speedUpBars;
+        activePresetIndex = 0;
+        currentPresetName = PRESETS[0].name;
       }
       tempoSlider.value = tempo;
-      tempoInput.value = tempo;
+      tempoInput.textContent = tempo;
       volSlider.value = Math.round(volume * 100);
       volDisplay.textContent = Math.round(volume * 100) + '%';
       speedUpBpmInput.value = speedUpBpm;
@@ -1762,13 +1838,13 @@
 
     const PRESETS = [
       { name: 'Blues Bend Run', key: 'Am', box: 1, data: {"bars":[[{"type":"quaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"quaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"}],[]],"tempo":120,"volume":1,"speedUpBpm":1,"speedUpBars":1} },
-      { name: 'Blues Lick 2', key: 'Am', box: 1, data: {"bars":[[{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
-      { name: 'Pentatonic Bounce', key: 'Am', box: 1, data: {"bars":[[{"type":"semiquaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"D5","bend":2},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"a5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
-      { name: 'Descending Run', key: 'Am', box: 1, data: {"bars":[[{"type":"semiquaver","note":"c6","bend":0},{"type":"semiquaver","note":"a5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"a5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5","bend":0},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"g5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"c5"},{"type":"semiquaver","note":"e5"},{"type":"semiquaver","note":"d5"},{"type":"semiquaver","note":"c5"},{"type":"semiquaver","note":"a4"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
-      { name: 'Quick Four', key: 'Em', box: 1, data: {"bars":[[{"type":"semiquaver","note":"G5","bend":0},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"},{"type":"semiquaver","note":"E5"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
-      { name: 'Triplet Bend', key: 'Em', box: 1, data: {"bars":[[{"type":"quaver","note":"D5","bend":2},{"type":"triplet_semiquaver","note":"E5"},{"type":"triplet_semiquaver","note":"D5"},{"type":"triplet_semiquaver","note":"B4"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
-      { name: 'Triplet Bend 2', key: 'Em', box: 1, data: {"bars":[[{"type":"quaver","note":"D5","bend":2},{"type":"triplet_semiquaver","note":"E5"},{"type":"triplet_semiquaver","note":"D5"},{"type":"triplet_semiquaver","note":"B4"},{"type":"quaver","note":"A4","bend":2},{"type":"triplet_semiquaver","note":"E5"},{"type":"triplet_semiquaver","note":"D5"},{"type":"triplet_semiquaver","note":"B4"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} },
-      { name: 'Bend & Run', key: 'Em', box: 1, data: {"bars":[[{"type":"quaver","note":"A4","bend":2},{"type":"semiquaver","note":"B4"},{"type":"semiquaver","note":"D5"}],[]],"tempo":120,"volume":0.08,"speedUpBpm":0,"speedUpBars":1} }
+      { name: 'Blues Lick 2', key: 'Am', box: 1, data: {"bars":[[{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Pentatonic Bounce', key: 'Am', box: 1, data: {"bars":[[{"type":"semiquaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5","bend":2},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Descending Run', key: 'Am', box: 1, data: {"bars":[[{"type":"semiquaver","note":"C6","bend":0},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"A5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5","bend":0},{"type":"semiquaver","note":"D5"},{"type":"semiquaver","note":"G5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"},{"type":"semiquaver","note":"C5"},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"},{"type":"semiquaver","note":"C5"},{"type":"semiquaver","note":"A4"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Quick Four', key: 'Em', box: 1, data: {"bars":[[{"type":"semiquaver","note":"G5","bend":0},{"type":"semiquaver","note":"E5"},{"type":"semiquaver","note":"D5"},{"type":"semiquaver","note":"E5"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Triplet Bend', key: 'Em', box: 1, data: {"bars":[[{"type":"quaver","note":"D5","bend":2},{"type":"triplet_semiquaver","note":"E5"},{"type":"triplet_semiquaver","note":"D5"},{"type":"triplet_semiquaver","note":"B4"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Triplet Bend 2', key: 'Em', box: 1, data: {"bars":[[{"type":"quaver","note":"D5","bend":2},{"type":"triplet_semiquaver","note":"E5"},{"type":"triplet_semiquaver","note":"D5"},{"type":"triplet_semiquaver","note":"B4"},{"type":"quaver","note":"A4","bend":2},{"type":"triplet_semiquaver","note":"E5"},{"type":"triplet_semiquaver","note":"D5"},{"type":"triplet_semiquaver","note":"B4"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} },
+      { name: 'Bend & Run', key: 'Em', box: 1, data: {"bars":[[{"type":"quaver","note":"A4","bend":2},{"type":"semiquaver","note":"B4"},{"type":"semiquaver","note":"D5"}],[]],"tempo":120,"volume":0.8,"speedUpBpm":0,"speedUpBars":1} }
     ];
 
     let activePresetIndex = null;
@@ -1799,81 +1875,519 @@
       speedUpBpm = ov ? ov.speedUpBpm : d.speedUpBpm;
       speedUpBars = ov ? ov.speedUpBars : d.speedUpBars;
       tempoSlider.value = tempo;
-      tempoInput.value = tempo;
+      tempoInput.textContent = tempo;
       volSlider.value = Math.round(volume * 100);
       volDisplay.textContent = Math.round(volume * 100) + '%';
       speedUpBpmInput.value = speedUpBpm;
       speedUpBarsInput.value = speedUpBars;
       activePresetIndex = index;
+      currentPresetName = preset.name || '';
+      document.getElementById('presetPickerBtn').value = preset.name || '';
       renderBars();
       saveState();
-      const row = document.getElementById('presetsRow');
-      row.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-      const btns = row.querySelectorAll('.preset-btn');
-      if (btns[index]) btns[index].classList.add('active');
     }
 
-    function renderPresets() {
-      const row = document.getElementById('presetsRow');
-      const select = document.getElementById('presetsSelect');
-      row.innerHTML = '';
-      select.innerHTML = '<option value="">-- Select preset --</option>';
+    function renderPresets() {}
+
+
+    loadState();
+    renderBars();
+    if (activePresetIndex === null && PRESETS.length > 0) {
+      loadPreset(PRESETS[0], 0);
+    } else if (activePresetIndex !== null) {
+      const allP = [...PRESETS, ...userPresets];
+      if (allP[activePresetIndex]) document.getElementById('presetPickerBtn').value = allP[activePresetIndex].name;
+    }
+
+    // Capacitor keyboard integration
+    // Pitch picker overlay
+    const pitchBackdrop = document.createElement('div');
+    pitchBackdrop.className = 'pitch-overlay-backdrop';
+    pitchBackdrop.innerHTML = `
+      <div class="pitch-overlay">
+        <div class="pitch-col" id="pitchNoteCol"></div>
+        <div class="pitch-col" id="pitchAccCol"></div>
+        <div class="pitch-col" id="pitchOctCol"></div>
+        <button class="pitch-ok">OK</button>
+      </div>
+    `;
+    document.body.appendChild(pitchBackdrop);
+
+    const pitchNoteCol = document.getElementById('pitchNoteCol');
+    const pitchAccCol = document.getElementById('pitchAccCol');
+    const pitchOctCol = document.getElementById('pitchOctCol');
+    let activePitchInput = null;
+
+    ['C','D','E','F','G','A','B'].forEach(n => {
+      const btn = document.createElement('button');
+      btn.textContent = n;
+      btn.addEventListener('click', () => { pitchNoteCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      pitchNoteCol.appendChild(btn);
+    });
+    [{label:'♮', val:''}, {label:'#', val:'#'}, {label:'b', val:'b'}].forEach(a => {
+      const btn = document.createElement('button');
+      btn.textContent = a.label;
+      btn.dataset.val = a.val;
+      btn.addEventListener('click', () => { pitchAccCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      pitchAccCol.appendChild(btn);
+    });
+    for (let o = 0; o <= 8; o++) {
+      const btn = document.createElement('button');
+      btn.textContent = o;
+      btn.addEventListener('click', () => { pitchOctCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      pitchOctCol.appendChild(btn);
+    }
+
+    function openPitchPicker(inputEl) {
+      activePitchInput = inputEl;
+      const val = inputEl.value || '';
+      const match = val.match(/^([A-Ga-g])([#b]?)(\d?)$/);
+      const note = match ? match[1].toUpperCase() : 'C';
+      const acc = match ? match[2] : '';
+      const oct = match ? (match[3] || '4') : '4';
+      pitchNoteCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === note); });
+      pitchAccCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.dataset.val === acc); });
+      pitchOctCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === oct); });
+      pitchBackdrop.classList.add('active');
+    }
+
+    pitchBackdrop.querySelector('.pitch-ok').addEventListener('click', () => {
+      if (!activePitchInput) return;
+      const note = pitchNoteCol.querySelector('.selected')?.textContent || 'C';
+      const acc = pitchAccCol.querySelector('.selected')?.dataset.val || '';
+      const oct = pitchOctCol.querySelector('.selected')?.textContent || '4';
+      activePitchInput.value = note + acc + oct;
+      activePitchInput.dispatchEvent(new Event('change'));
+      pitchBackdrop.classList.remove('active');
+      activePitchInput = null;
+    });
+
+    pitchBackdrop.addEventListener('click', (e) => {
+      if (e.target === pitchBackdrop) {
+        pitchBackdrop.classList.remove('active');
+        activePitchInput = null;
+      }
+    });
+
+    // Fret picker overlay
+    const fretBackdrop = document.createElement('div');
+    fretBackdrop.className = 'pitch-overlay-backdrop';
+    fretBackdrop.innerHTML = `
+      <div class="pitch-overlay" style="flex-direction:column;align-items:stretch;">
+        <div class="fret-grid" id="fretGrid"></div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+          <span style="color:#ff8a5c;font-size:0.85rem;">Bend:</span>
+          <div class="pitch-col" id="fretBendDir" style="flex-direction:row;gap:4px;"></div>
+          <div class="pitch-col" id="fretBendAmt" style="flex-direction:row;gap:4px;flex-wrap:wrap;"></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px;">
+          <button class="pitch-ok" id="fretClear" style="background:#555;">Clear</button>
+          <button class="pitch-ok" id="fretOk">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(fretBackdrop);
+
+    const fretGrid = document.getElementById('fretGrid');
+    const fretBendDir = document.getElementById('fretBendDir');
+    const fretBendAmt = document.getElementById('fretBendAmt');
+    let fretCallback = null;
+
+    for (let f = 0; f <= 24; f++) {
+      const btn = document.createElement('button');
+      btn.textContent = f;
+      btn.addEventListener('click', () => { fretGrid.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      fretGrid.appendChild(btn);
+    }
+
+    ['↑', '↓'].forEach((label, idx) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.dataset.dir = idx === 0 ? '1' : '-1';
+      btn.addEventListener('click', () => { fretBendDir.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      fretBendDir.appendChild(btn);
+    });
+    for (let a = 0; a <= 5; a++) {
+      const btn = document.createElement('button');
+      btn.textContent = a;
+      btn.addEventListener('click', () => { fretBendAmt.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      fretBendAmt.appendChild(btn);
+    }
+
+    function openFretPicker(currentFret, callback, currentBend) {
+      fretCallback = callback;
+      fretGrid.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === currentFret); });
+      const bend = currentBend || 0;
+      const dir = bend >= 0 ? '1' : '-1';
+      const amt = Math.abs(bend);
+      fretBendDir.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.dataset.dir === dir); });
+      fretBendAmt.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === String(amt)); });
+      fretBackdrop.classList.add('active');
+    }
+
+    document.getElementById('fretOk').addEventListener('click', () => {
+      const sel = fretGrid.querySelector('.selected');
+      const bendDir = parseInt(fretBendDir.querySelector('.selected')?.dataset.dir || '1');
+      const bendAmt = parseInt(fretBendAmt.querySelector('.selected')?.textContent || '0');
+      if (fretCallback) fretCallback(sel ? parseInt(sel.textContent) : null, bendAmt * bendDir);
+      fretBackdrop.classList.remove('active');
+      fretCallback = null;
+    });
+
+    document.getElementById('fretClear').addEventListener('click', () => {
+      if (fretCallback) fretCallback(null, 0);
+      fretBackdrop.classList.remove('active');
+      fretCallback = null;
+    });
+
+    fretBackdrop.addEventListener('click', (e) => {
+      if (e.target === fretBackdrop) {
+        fretBackdrop.classList.remove('active');
+        fretCallback = null;
+      }
+    });
+
+    // Name overlay
+    const nameBackdrop = document.createElement('div');
+    nameBackdrop.className = 'pitch-overlay-backdrop';
+    nameBackdrop.innerHTML = `
+      <div class="pitch-overlay" style="flex-direction:column;align-items:stretch;gap:12px;padding:16px;width:280px;">
+        <label style="color:#ccc;font-size:0.85rem;">Preset Name</label>
+        <input type="text" id="nameOverlayInput" style="padding:0.5rem;border:1px solid #444;border-radius:4px;background:#0f3460;color:#eee;font-size:1rem;">
+        <button class="pitch-ok" id="nameOk">OK</button>
+      </div>
+    `;
+    document.body.appendChild(nameBackdrop);
+
+    editNameInput.addEventListener('click', () => {
+      if (!editMode) return;
+      const input = document.getElementById('nameOverlayInput');
+      input.value = editNameInput.value;
+      nameBackdrop.classList.add('active');
+      setTimeout(() => input.focus(), 50);
+    });
+
+    document.getElementById('nameOk').addEventListener('click', () => {
+      editNameInput.value = document.getElementById('nameOverlayInput').value;
+      nameBackdrop.classList.remove('active');
+    });
+
+    document.getElementById('nameOverlayInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        editNameInput.value = e.target.value;
+        nameBackdrop.classList.remove('active');
+      }
+    });
+
+    nameBackdrop.addEventListener('click', (e) => {
+      if (e.target === nameBackdrop) nameBackdrop.classList.remove('active');
+    });
+
+    // Preset picker overlay
+    const presetBackdrop = document.createElement('div');
+    presetBackdrop.className = 'pitch-overlay-backdrop';
+    presetBackdrop.innerHTML = `
+      <div class="pitch-overlay" style="flex-direction:column;align-items:stretch;gap:4px;padding:12px;max-height:80vh;overflow-y:auto;min-width:200px;">
+        <div id="presetOverlayList" class="pitch-col"></div>
+      </div>
+    `;
+    document.body.appendChild(presetBackdrop);
+
+    const presetPickerBtn = document.getElementById('presetPickerBtn');
+    const presetOverlayList = document.getElementById('presetOverlayList');
+
+    presetPickerBtn.addEventListener('click', () => {
+      presetOverlayList.innerHTML = '';
       const allPresets = [...PRESETS, ...userPresets];
       allPresets.forEach((preset, i) => {
-        const container = document.createElement('span');
-        container.style.position = 'relative';
-        container.style.display = 'inline-block';
         const btn = document.createElement('button');
-        btn.className = 'preset-btn';
         btn.textContent = preset.name;
-        btn.addEventListener('click', () => loadPreset(preset, i));
-        container.appendChild(btn);
-        if (i >= PRESETS.length) {
-          const del = document.createElement('button');
-          del.textContent = '×';
-          del.style.cssText = 'position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:#e94560;color:white;border:none;font-size:10px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1;';
-          container.addEventListener('mouseenter', () => del.style.display = 'flex');
-          container.addEventListener('mouseleave', () => del.style.display = 'none');
-          del.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const userIdx = i - PRESETS.length;
-            userPresets.splice(userIdx, 1);
-            localStorage.setItem('metronome_user_presets', JSON.stringify(userPresets));
-            if (activePresetIndex === i) activePresetIndex = null;
-            else if (activePresetIndex > i) activePresetIndex--;
-            renderPresets();
-            saveState();
-          });
-          container.appendChild(del);
+        if (i === activePresetIndex) btn.classList.add('selected');
+        btn.addEventListener('click', () => {
+          presetBackdrop.classList.remove('active');
+          loadPreset(preset, i);
+          presetPickerBtn.value = preset.name;
+        });
+        presetOverlayList.appendChild(btn);
+      });
+      presetBackdrop.classList.add('active');
+    });
+
+    presetBackdrop.addEventListener('click', (e) => {
+      if (e.target === presetBackdrop) presetBackdrop.classList.remove('active');
+    });
+
+    // Confirm overlay
+    const confirmBackdrop = document.createElement('div');
+    confirmBackdrop.className = 'pitch-overlay-backdrop';
+    confirmBackdrop.innerHTML = `
+      <div class="pitch-overlay" style="flex-direction:column;align-items:center;gap:16px;padding:20px;">
+        <span id="confirmMsg" style="color:#eee;font-size:1rem;text-align:center;"></span>
+        <div style="display:flex;gap:12px;">
+          <button class="pitch-ok" id="confirmYes" style="background:#e94560;">Delete</button>
+          <button class="pitch-ok" id="confirmNo" style="background:#444;">Cancel</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(confirmBackdrop);
+    let confirmCallback = null;
+
+    function openConfirmOverlay(message, onConfirm) {
+      document.getElementById('confirmMsg').textContent = message;
+      confirmCallback = onConfirm;
+      confirmBackdrop.classList.add('active');
+    }
+
+    document.getElementById('confirmYes').addEventListener('click', () => {
+      confirmBackdrop.classList.remove('active');
+      if (confirmCallback) confirmCallback();
+      confirmCallback = null;
+    });
+
+    document.getElementById('confirmNo').addEventListener('click', () => {
+      confirmBackdrop.classList.remove('active');
+      confirmCallback = null;
+    });
+
+    confirmBackdrop.addEventListener('click', (e) => {
+      if (e.target === confirmBackdrop) {
+        confirmBackdrop.classList.remove('active');
+        confirmCallback = null;
+      }
+    });
+
+    // Key picker overlay
+    const keyBackdrop = document.createElement('div');
+    keyBackdrop.className = 'pitch-overlay-backdrop';
+    keyBackdrop.innerHTML = `
+      <div class="pitch-overlay">
+        <div class="pitch-col" id="keyNoteCol"></div>
+        <div class="pitch-col" id="keyAccCol"></div>
+        <div class="pitch-col" id="keyQualCol"></div>
+        <button class="pitch-ok" id="keyOk">OK</button>
+      </div>
+    `;
+    document.body.appendChild(keyBackdrop);
+    const keyNoteCol = document.getElementById('keyNoteCol');
+    const keyAccCol = document.getElementById('keyAccCol');
+    const keyQualCol = document.getElementById('keyQualCol');
+
+    ['A','B','C','D','E','F','G'].forEach(n => {
+      const btn = document.createElement('button');
+      btn.textContent = n;
+      btn.addEventListener('click', () => { keyNoteCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      keyNoteCol.appendChild(btn);
+    });
+    [{label:'♮', val:''}, {label:'#', val:'#'}, {label:'b', val:'b'}].forEach(a => {
+      const btn = document.createElement('button');
+      btn.textContent = a.label;
+      btn.dataset.val = a.val;
+      btn.addEventListener('click', () => { keyAccCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      keyAccCol.appendChild(btn);
+    });
+    [{label:'Ionian', val:''}, {label:'Dorian', val:'dor'}, {label:'Phrygian', val:'phr'}, {label:'Lydian', val:'lyd'}, {label:'Mixolydian', val:'mix'}, {label:'Aeolian', val:'m'}, {label:'Locrian', val:'loc'}].forEach(q => {
+      const btn = document.createElement('button');
+      btn.textContent = q.label;
+      btn.dataset.val = q.val;
+      btn.addEventListener('click', () => { keyQualCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      keyQualCol.appendChild(btn);
+    });
+
+    function openKeyPicker() {
+      const match = currentKey.match(/^([A-G])(#|b)?(.*)$/);
+      const note = match ? match[1] : 'A';
+      const acc = match ? (match[2] || '') : '';
+      const qual = match ? (match[3] || '') : 'm';
+      keyNoteCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === note); });
+      keyAccCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.dataset.val === acc); });
+      keyQualCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.dataset.val === qual); });
+      keyBackdrop.classList.add('active');
+    }
+
+    document.getElementById('keyOk').addEventListener('click', () => {
+      const note = keyNoteCol.querySelector('.selected')?.textContent || 'A';
+      const acc = keyAccCol.querySelector('.selected')?.dataset.val || '';
+      const qual = keyQualCol.querySelector('.selected')?.dataset.val || '';
+      currentKey = note + acc + qual;
+      editKeySelect.value = currentKey;
+      renderTab();
+      keyBackdrop.classList.remove('active');
+    });
+
+    keyBackdrop.addEventListener('click', (e) => {
+      if (e.target === keyBackdrop) keyBackdrop.classList.remove('active');
+    });
+
+    // Box picker overlay
+    const boxBackdrop = document.createElement('div');
+    boxBackdrop.className = 'pitch-overlay-backdrop';
+    boxBackdrop.innerHTML = `
+      <div class="pitch-overlay">
+        <div class="pitch-col" id="boxCol"></div>
+      </div>
+    `;
+    document.body.appendChild(boxBackdrop);
+    const boxCol = document.getElementById('boxCol');
+
+    for (let b = 1; b <= 5; b++) {
+      const btn = document.createElement('button');
+      btn.textContent = b;
+      btn.addEventListener('click', () => {
+        boxCol.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+        btn.classList.add('selected');
+        currentBox = b;
+        editBoxInput.value = b;
+        renderTab();
+        boxBackdrop.classList.remove('active');
+      });
+      boxCol.appendChild(btn);
+    }
+
+    function openBoxPicker(inputEl) {
+      boxCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === inputEl.value); });
+      boxBackdrop.classList.add('active');
+    }
+
+    boxBackdrop.addEventListener('click', (e) => {
+      if (e.target === boxBackdrop) boxBackdrop.classList.remove('active');
+    });
+
+    // Bend picker overlay
+    const bendBackdrop = document.createElement('div');
+    bendBackdrop.className = 'pitch-overlay-backdrop';
+    bendBackdrop.innerHTML = `
+      <div class="pitch-overlay">
+        <div class="pitch-col" id="bendDirCol"></div>
+        <div class="pitch-col" id="bendAmtCol"></div>
+        <button class="pitch-ok" id="bendOk">OK</button>
+      </div>
+    `;
+    document.body.appendChild(bendBackdrop);
+
+    const bendDirCol = document.getElementById('bendDirCol');
+    const bendAmtCol = document.getElementById('bendAmtCol');
+    let activeBendInput = null;
+    let activeBendItem = null;
+
+    ['↑ Up', '↓ Down'].forEach((label, idx) => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.dataset.dir = idx === 0 ? '1' : '-1';
+      btn.addEventListener('click', () => { bendDirCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      bendDirCol.appendChild(btn);
+    });
+    for (let a = 0; a <= 5; a++) {
+      const btn = document.createElement('button');
+      btn.textContent = a;
+      btn.addEventListener('click', () => { bendAmtCol.querySelectorAll('button').forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); });
+      bendAmtCol.appendChild(btn);
+    }
+
+    function openBendPicker(inputEl, item) {
+      activeBendInput = inputEl;
+      activeBendItem = item;
+      const bend = item.bend || 0;
+      const dir = bend >= 0 ? '1' : '-1';
+      const amt = Math.abs(bend);
+      bendDirCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.dataset.dir === dir); });
+      bendAmtCol.querySelectorAll('button').forEach(b => { b.classList.toggle('selected', b.textContent === String(amt)); });
+      bendBackdrop.classList.add('active');
+    }
+
+    document.getElementById('bendOk').addEventListener('click', () => {
+      if (!activeBendInput || !activeBendItem) return;
+      const dir = parseInt(bendDirCol.querySelector('.selected')?.dataset.dir || '1');
+      const amt = parseInt(bendAmtCol.querySelector('.selected')?.textContent || '0');
+      activeBendItem.bend = amt * dir;
+      activeBendInput.value = amt > 0 ? (dir > 0 ? '↑' : '↓') + amt : '';
+      activeBendInput.dispatchEvent(new Event('change'));
+      bendBackdrop.classList.remove('active');
+      activeBendInput = null;
+      activeBendItem = null;
+    });
+
+    bendBackdrop.addEventListener('click', (e) => {
+      if (e.target === bendBackdrop) {
+        bendBackdrop.classList.remove('active');
+        activeBendInput = null;
+        activeBendItem = null;
+      }
+    });
+
+    // Number picker overlay
+    const numBackdrop = document.createElement('div');
+    numBackdrop.className = 'pitch-overlay-backdrop';
+    numBackdrop.innerHTML = `
+      <div class="pitch-overlay" style="flex-direction:column;align-items:stretch;gap:12px;padding:16px;min-width:220px;">
+        <span id="numPickerLabel" style="color:#ccc;font-size:0.85rem;text-align:center;"></span>
+        <div class="fret-grid" id="numPickerGrid" style="grid-template-columns:repeat(5,1fr);"></div>
+        <button class="pitch-ok" id="numPickerOk">OK</button>
+      </div>
+    `;
+    document.body.appendChild(numBackdrop);
+    let numPickerCallback = null;
+
+    function openNumberPicker(label, min, max, current, callback) {
+      numPickerCallback = callback;
+      document.getElementById('numPickerLabel').textContent = label;
+      const grid = document.getElementById('numPickerGrid');
+      grid.innerHTML = '';
+      for (let n = min; n <= max; n++) {
+        const btn = document.createElement('button');
+        btn.textContent = n;
+        if (n === current) btn.classList.add('selected');
+        btn.addEventListener('click', () => {
+          grid.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+        grid.appendChild(btn);
+      }
+      numBackdrop.classList.add('active');
+    }
+
+    document.getElementById('numPickerOk').addEventListener('click', () => {
+      const sel = document.getElementById('numPickerGrid').querySelector('.selected');
+      if (numPickerCallback && sel) numPickerCallback(parseInt(sel.textContent));
+      numBackdrop.classList.remove('active');
+      numPickerCallback = null;
+    });
+
+    numBackdrop.addEventListener('click', (e) => {
+      if (e.target === numBackdrop) {
+        numBackdrop.classList.remove('active');
+        numPickerCallback = null;
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && playing) {
+        stop();
+      } else if (!document.hidden && audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    });
+
+    function handleAudioInterruption() {
+      if (!audioCtx) return;
+      audioCtx.addEventListener('statechange', () => {
+        if (audioCtx.state === 'interrupted' || audioCtx.state === 'suspended') {
+          if (playing) stop();
         }
-        row.appendChild(container);
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = preset.name;
-        if (i === activePresetIndex) opt.selected = true;
-        select.appendChild(opt);
       });
     }
 
-    document.getElementById('presetsSelect').addEventListener('change', (e) => {
-      const idx = parseInt(e.target.value);
-      if (isNaN(idx)) return;
-      const allPresets = [...PRESETS, ...userPresets];
-      loadPreset(allPresets[idx], idx);
-    });
-
-    loadState();
-    renderPresets();
-    renderBars();
-    if (activePresetIndex !== null) {
-      const btns = document.getElementById('presetsRow').querySelectorAll('.preset-btn');
-      if (btns[activePresetIndex]) btns[activePresetIndex].classList.add('active');
-    }
-    if (editMode) enterEditMode(false);
-
-    // Capacitor keyboard integration
-    if (window.Capacitor) {
-      import('@capacitor/keyboard').then(({ Keyboard }) => {
+    if (window.Capacitor && window.Capacitor.Plugins) {
+      const { Keyboard, StatusBar, App } = window.Capacitor.Plugins;
+      if (App) {
+        App.addListener('appStateChange', ({ isActive }) => {
+          if (!isActive && playing) {
+            stop();
+          } else if (isActive && audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        });
+      }
+      if (Keyboard) {
         Keyboard.addListener('keyboardWillShow', (info) => {
           document.body.style.paddingBottom = info.keyboardHeight + 'px';
           const active = document.activeElement;
@@ -1886,12 +2400,11 @@
         Keyboard.addListener('keyboardWillHide', () => {
           document.body.style.paddingBottom = 'env(safe-area-inset-bottom)';
         });
-      }).catch(() => {});
-
-      import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-        StatusBar.setStyle({ style: Style.Dark });
+      }
+      if (StatusBar) {
+        StatusBar.setStyle({ style: 'DARK' });
         StatusBar.setBackgroundColor({ color: '#1a1a2e' });
-      }).catch(() => {});
+      }
     }
   </script>
 </body>

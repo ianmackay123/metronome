@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.metronome.speedtrainer',
-  appName: 'Speed Trainer',
+  appName: 'Guitar Lick Speed Trainer',
   webDir: 'www',
   plugins: {
     Keyboard: {
