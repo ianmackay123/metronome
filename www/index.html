@@ -108,6 +108,15 @@
     .app.edit-mode .beat-cell .remove-btn { display: flex !important; }
     .beat-cell .pitch-input,
     .beat-cell .bend-row { display: none; }
+    .beat-cell .bend-indicator {
+      font-size: 0.7rem;
+      color: #ff8a5c;
+      position: absolute;
+      top: 22px;
+      right: 2px;
+      line-height: 1;
+    }
+    .app.edit-mode .beat-cell .bend-indicator { display: none; }
     .app.edit-mode .beat-cell { grid-template-rows: 22px 2.4rem 0.9rem 30px 30px; }
     .app.edit-mode .beat-cell .pitch-input { display: block; }
     .app.edit-mode .beat-cell .bend-row { display: flex; }
@@ -1040,9 +1049,10 @@
               <span></span>
             `;
           } else {
+            const bendIndicator = bendAbs > 0 ? `<span class="bend-indicator">${bendUp ? '↑' : '↓'}${bendAbs}</span>` : '';
             cell.innerHTML = `
               <div class="note-bar" style="background:${barColor}"><button class="remove-btn">&times;</button></div>
-              <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>
+              <span class="note-label music-symbol">${NOTE_TYPES[type].label}</span>${bendIndicator}
               <span class="note-name">${NOTE_TYPES[type].name}</span>
               <input class="pitch-input" type="text" value="${note}" placeholder="C4" maxlength="3">
               <div class="bend-row">
