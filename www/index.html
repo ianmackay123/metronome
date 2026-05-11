@@ -102,6 +102,17 @@
       text-align: center;
       font-size: 1rem;
     }
+    .max-bpm {
+      font-size: 0.8rem;
+      color: #888;
+      white-space: nowrap;
+      padding-left: 0.3rem;
+      line-height: 1.4;
+    }
+    .all-time-max {
+      font-size: 0.65rem;
+      color: #666;
+    }
     .tempo-arrow {
       background: #16213e;
       border: 1px solid #444;
@@ -537,7 +548,27 @@
       background: #1a1a2e;
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 12px;
     }
+    .play-footer .slow-play-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      border: 1px solid #e94560;
+      background: transparent;
+      color: #e94560;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .play-footer .slow-play-btn:active { transform: scale(0.97); }
+    .play-footer .slow-play-btn.playing { background: #ff8a5c; border-color: #ff8a5c; color: white; }
     .play-footer .play-btn {
       width: 100%;
       max-width: 400px;
@@ -734,7 +765,6 @@
 
     <div class="controls">
       <div class="ctrl-item ctrl-normal"><button id="countInBtn" class="count-in-btn" title="Toggle count-in"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button><span class="ctrl-label">Count in</span></div>
-      <div class="ctrl-item ctrl-normal"><button id="easeInBtn" class="count-in-btn" title="Start 2 BPM below"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><polyline points="5 12 12 19 19 12"/></svg></button><span class="ctrl-label">Slow start</span></div>
       <div class="ctrl-item"><button id="editBtn" class="count-in-btn" title="Edit"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><span class="ctrl-label">Edit</span></div>
       <div class="ctrl-item ctrl-normal"><button id="createNewBtn" class="count-in-btn" title="Create new preset"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><span class="ctrl-label">New</span></div>
       <div class="ctrl-item ctrl-edit"><button id="resetBtn" class="reset-btn" title="Reset"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button><span class="ctrl-label">Revert</span></div>
@@ -771,6 +801,7 @@
           <span id="tempoInput" class="tempo-display">120</span>
           <button id="tempoUp" class="tempo-arrow">▶</button>
           <span>BPM</span>
+          <span class="max-bpm" id="maxBpmDisplay">⏐ <span id="maxBpmValue">0</span> max<br><span class="all-time-max"><span id="allTimeMaxValue">0</span> all time <svg id="allTimeMaxReset" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;cursor:pointer" title="Reset all-time max"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></span></span>
         </div>
       </div>
       <div class="tempo-section">
@@ -914,6 +945,7 @@
   </div>
 
   <div class="play-footer">
+    <button id="slowPlayBtn" class="slow-play-btn" title="Play at -5 BPM"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></svg><span style="font-size:0.7rem;margin-left:2px">-5</span></button>
     <button id="playBtn" class="play-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg></button>
   </div>
 
@@ -981,6 +1013,8 @@
 
     let bars = [[], []];
     let tempo = 120;
+    let maxBpm = 0;
+    let allTimeMax = parseInt(localStorage.getItem('metronome_allTimeMax') || '0');
     let volume = 0.8;
     let speedUpBpm = 0;
     let speedUpBars = 4;
@@ -1022,6 +1056,37 @@
       tempoInput.textContent = tempo;
       tempoSlider.value = tempo;
       saveState();
+    });
+
+    const maxBpmValue = document.getElementById('maxBpmValue');
+    const allTimeMaxValue = document.getElementById('allTimeMaxValue');
+    allTimeMaxValue.textContent = allTimeMax;
+    allTimeMaxValue.style.color = getMaxColor(allTimeMax);
+
+    function getMaxColor(bpm) {
+      if (bpm >= 120) return '#4caf50';
+      if (bpm >= 100) return '#ff9800';
+      return '#e94560';
+    }
+
+    function updateMaxBpm() {
+      if (tempo > maxBpm) {
+        maxBpm = tempo;
+        maxBpmValue.textContent = maxBpm;
+        maxBpmValue.style.color = getMaxColor(maxBpm);
+      }
+      if (tempo > allTimeMax) {
+        allTimeMax = tempo;
+        allTimeMaxValue.textContent = allTimeMax;
+        allTimeMaxValue.style.color = getMaxColor(allTimeMax);
+        localStorage.setItem('metronome_allTimeMax', allTimeMax);
+      }
+    }
+
+    document.getElementById('allTimeMaxReset').addEventListener('click', () => {
+      allTimeMax = 0;
+      allTimeMaxValue.textContent = allTimeMax;
+      localStorage.setItem('metronome_allTimeMax', '0');
     });
 
     const volSlider = document.getElementById('volSlider');
@@ -1069,6 +1134,23 @@
 
     playBtn.addEventListener('click', () => {
       if (playing) { stop(); } else { start(); }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        if (playing) { stop(); } else { start(); }
+      }
+    });
+
+    const slowPlayBtn = document.getElementById('slowPlayBtn');
+    slowPlayBtn.addEventListener('click', () => {
+      if (playing) { stop(); return; }
+      tempo = Math.max(20, tempo - 5);
+      tempoSlider.value = tempo;
+      tempoInput.textContent = tempo;
+      saveState();
+      start();
     });
 
     function noteBarColor(beats) {
@@ -1423,11 +1505,6 @@
     });
 
     let easeInEnabled = false;
-    const easeInBtn = document.getElementById('easeInBtn');
-    easeInBtn.addEventListener('click', () => {
-      easeInEnabled = !easeInEnabled;
-      easeInBtn.classList.toggle('active', easeInEnabled);
-    });
 
     const editBtn = document.getElementById('editBtn');
     const createNewBtn = document.getElementById('createNewBtn');
@@ -1561,6 +1638,9 @@
     function start() {
       pattern = buildPattern();
       if (pattern.length === 0) return;
+      maxBpm = tempo;
+      maxBpmValue.textContent = maxBpm;
+      maxBpmValue.style.color = getMaxColor(maxBpm);
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         handleAudioInterruption();
@@ -1571,6 +1651,7 @@
       playGeneration++;
       const gen = playGeneration;
       playBtn.classList.add('playing');
+      slowPlayBtn.classList.add('playing');
       currentNote = 0;
       loopCount = 0;
 
@@ -1639,6 +1720,7 @@
       }
       playBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
       playBtn.classList.remove('playing');
+      slowPlayBtn.classList.remove('playing');
       if (timerID) { clearTimeout(timerID); timerID = null; }
       playhead.style.left = '0%';
     }
@@ -1657,6 +1739,7 @@
             tempo = Math.min(300, tempo + speedUpBpm);
             tempoSlider.value = tempo;
             tempoInput.textContent = tempo;
+            updateMaxBpm();
           }
         }
       }
@@ -1830,6 +1913,7 @@
       }
       tempoSlider.value = tempo;
       tempoInput.textContent = tempo;
+      maxBpmValue.textContent = maxBpm;
       volSlider.value = Math.round(volume * 100);
       volDisplay.textContent = Math.round(volume * 100) + '%';
       speedUpBpmInput.value = speedUpBpm;
